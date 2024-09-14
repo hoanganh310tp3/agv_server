@@ -33,7 +33,7 @@ class agv_data(models.Model):
     data_id = models.BigAutoField(primary_key=True) 
     car_id = models.ForeignKey(agv_identify, on_delete=models.CASCADE) #many-to-one relationship test
     #car_id = models.IntegerField()
-    car_state = models.IntegerField()
+    agv_state = models.IntegerField()
     agv_speed = models.FloatField()
     distance = models.FloatField()
     agv_battery = models.FloatField()
