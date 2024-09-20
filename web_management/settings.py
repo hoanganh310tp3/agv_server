@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'users_management',
     'django_extensions',
     'corsheaders',
     'rest_framework',
@@ -55,7 +56,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'agv_management',
     'channels',
-    'users_management',
+    'requests_management',
 ]
 
 MIDDLEWARE = [
@@ -98,9 +99,9 @@ ASGI_APPLICATION = 'web_management.asgi.application'
 DATABASES = {
 'default': {
 'ENGINE': 'django.db.backends.postgresql_psycopg2',
-'NAME': 'agv_database',
-'USER': 'agv',
-'PASSWORD': '123456hadz',
+'NAME': 'agv_database2',
+'USER': 'demo_user2',
+'PASSWORD': '123456',
 'HOST': 'localhost',
 'PORT': '5432',
 },
