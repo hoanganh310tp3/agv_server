@@ -13,3 +13,5 @@ class ABCSetting:
     L = 10
     # Acceleration Coefficient Upper Bound
     a = 1
+    
+#Định nghĩa các tham số cho thuật toán ABC.

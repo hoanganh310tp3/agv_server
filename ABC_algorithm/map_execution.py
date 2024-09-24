@@ -1,6 +1,7 @@
 import numpy
+import abc_parameters
 import environ
-
+#Xử lý bản đồ và các yếu tố liên quan đến đường đi.
 env = environ.Env()
 environ.Env.read_env()
 
@@ -54,7 +55,7 @@ class Map:
         HighPoint = float(100)
         while (CurrentNode != int(Outbound)):
             Count = Count + 1
-            if(Count == 20):  # Thay thế bằng ABCSetting.nCount nếu cần
+            if(Count == abc_parameters.ABCSetting.nCount):  # Thay thế bằng ABCSetting.nCount nếu cần
                 return TravelledNode
             Flag = bool(False)
             RandomNumber = numpy.random.uniform(1,HighPoint)

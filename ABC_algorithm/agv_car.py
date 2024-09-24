@@ -17,3 +17,5 @@ class AGVCar:
         self.Location = ""
         self.BatteryCapacity = "100"
         self.CurrentPosition = ""
+
+#Định nghĩa lớp AGVCar và các thuộc tính liên quan.

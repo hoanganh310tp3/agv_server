@@ -1,21 +1,21 @@
 import agv_car
-import control_signal
+#Tính toán năng lượng tiêu thụ của AGV.
 class EnergyConsumption:   
 
     @staticmethod 
     def returnTranslatePower(Acceleration,Velocity,WeightLoad):
-        TranslatePower = (Dto.AGVCar.AGVCar.AGVWeight + WeightLoad)*(Dto.AGVCar.AGVCar.nguy*Dto.AGVCar.AGVCar.g + Acceleration)*Velocity
+        TranslatePower = (agv_car.AGVCar.AGVWeight + WeightLoad)*(agv_car.AGVCar.nguy*agv_car.AGVCar.g + Acceleration)*Velocity
         return TranslatePower
     
     @staticmethod 
     def returnMotorPower(TranslatePower):
-        MotorPower = TranslatePower*(1/Dto.AGVCar.AGVCar.nuyMotor)
+        MotorPower = TranslatePower*(1/agv_car.AGVCar.nuyMotor)
         return MotorPower
     
     @staticmethod 
     def returnAccelerationEnergy(RealVelocity,ControlSignal,WeightLoad):
-        AccelerationTime = (float(ControlSignal.Velocity)-float(RealVelocity))/float(Dto.AGVCar.AGVCar.MaxAccelaration)
-        Acceleration = Dto.AGVCar.AGVCar.MaxAccelaration + Dto.AGVCar.AGVCar.nguy*Dto.AGVCar.AGVCar.g
+        AccelerationTime = (float(ControlSignal.Velocity)-float(RealVelocity))/float(agv_car.AGVCar.MaxAccelaration)
+        Acceleration = agv_car.AGVCar.MaxAccelaration + agv_car.AGVCar.nguy*agv_car.AGVCar.g
         i = 0
         Step = 0.01
         TotalMotorPower = 0
@@ -36,8 +36,8 @@ class EnergyConsumption:
     
     @staticmethod 
     def returnBrakingEnergy(RealVelocity,ControlSignal,WeightLoad):
-        AccelerationTime = (float(RealVelocity)-float(ControlSignal.Velocity))/float(Dto.AGVCar.AGVCar.MinAccelaration)
-        Acceleration = Dto.AGVCar.AGVCar.MinAccelaration - Dto.AGVCar.AGVCar.nguy*Dto.AGVCar.AGVCar.g
+        AccelerationTime = (float(RealVelocity)-float(ControlSignal.Velocity))/float(agv_car.AGVCar.MinAccelaration)
+        Acceleration = agv_car.AGVCar.MinAccelaration - agv_car.AGVCar.nguy*agv_car.AGVCar.g
         Step = 0.01
         i = 0
         TotalMotorPower = 0

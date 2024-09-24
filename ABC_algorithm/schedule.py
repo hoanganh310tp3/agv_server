@@ -6,8 +6,8 @@ import requirement
 import agv_car
 import schedule
 
-
-
+#Quản lý lịch trình và các yêu cầu liên quan đến lịch trình.
+#Định nghĩa lớp Schedule và các phương thức liên quan.
 from agv_car import AGVCar
 
 class Schedule:

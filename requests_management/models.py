@@ -33,7 +33,7 @@ class order_data(models.Model):
     end_waypoint = models.PositiveBigIntegerField(default= 0)
     schedule_status = models.BooleanField(default=False)
     process_status = models.BooleanField(default=False)
-
+    control_signal = models.CharField(max_length=1024, default= '')
     def __str__(self):
      return "Request #{ID}".format(ID = self.order_number)
 

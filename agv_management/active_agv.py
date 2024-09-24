@@ -1,29 +1,29 @@
-# from django.utils import timezone
-# import datetime
-# import time
+from django.utils import timezone
+import datetime
+import time
 
-# from agv_management.models import agv_data, agv_identify 
+from agv_management.models import agv_data, agv_identify 
 
-# def is_agv_active(carID):
-#     AGVisActive = agv_identify.objects.filter(agv_id = carID, operation = True, connection = True).exists()
-#     return AGVisActive
+def is_agv_active(carID):
+    AGVisActive = agv_identify.objects.filter(agv_id = carID, operation = True, connection = True).exists()
+    return AGVisActive
 
-# def list_active_AGV():
-#     listOfActiveAGV = []
-#     AGVisActive = agv_identify.objects.all().filter(operation = True, connection = True).order_by('agv_id')
-#     for eachQuery in AGVisActive:
-#         listOfActiveAGV.append([eachQuery.agv_id, eachQuery.parking_lot])
-#     return listOfActiveAGV
+def list_active_AGV():
+    listOfActiveAGV = []
+    AGVisActive = agv_identify.objects.all().filter(operation = True, connection = True).order_by('agv_id')
+    for eachQuery in AGVisActive:
+        listOfActiveAGV.append([eachQuery.agv_id, eachQuery.parking_lot])
+    return listOfActiveAGV
 
-# def check_connect_AGV():
-#     now = time.mktime(datetime.datetime.now().timetuple)
+def check_connect_AGV():
+    now = time.mktime(datetime.datetime.now().timetuple)
 
-#     listOfActiveAGV = list_active_AGV()
-#     for eachCar in listOfActiveAGV:
-#         query = agv_data.objects.all().filter(agv_identify__car_id = eachCar[0]).last()
-#         dataTime = time.mktime(query.time_stamp.timetuple())
-#         if (now - dataTime) > 300:
-#             agv_identify.objects.filter(agv_id = eachCar[0]).update(connected = False)
+    listOfActiveAGV = list_active_AGV()
+    for eachCar in listOfActiveAGV:
+        query = agv_data.objects.all().filter(agv_identify__car_id = eachCar[0]).last()
+        dataTime = time.mktime(query.time_stamp.timetuple())
+        if (now - dataTime) > 300:
+            agv_identify.objects.filter(agv_id = eachCar[0]).update(connected = False)
 
 # may be needed to fix
 
@@ -50,7 +50,6 @@
 #         query = agv_data.objects.all().filter(agv_identify__car_id = eachCar[0], car_state = 11).last()
 #         if query:
 #             agv_identify.objects.filter(agv_id = eachCar[0]).update(connected = False)
-
 #     pass
 
 # def deactivate_AGV():
