@@ -1,4 +1,4 @@
-import map_execution
+from . import map_execution
 #Định nghĩa lớp MapTopology và các phương thức liên quan đến bản đồ.
 class MapTopology:
     Map = map_execution.Map.returnMap()[0]

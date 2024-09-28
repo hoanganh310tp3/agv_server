@@ -1,7 +1,7 @@
 import psycopg2
 
-conn = psycopg2.connect(user="demo_user2",
-                        password="123456",
+conn = psycopg2.connect(user="agv",
+                        password="123456hadz",
                         host="localhost",
                         port="5432",
-                        database="agv_database2")
+                        database="agv_database")

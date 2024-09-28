@@ -57,6 +57,9 @@ INSTALLED_APPS = [
     'agv_management',
     'channels',
     'requests_management',
+    'home',
+    'map_management',
+    'material_management',
 ]
 
 MIDDLEWARE = [
@@ -99,9 +102,9 @@ ASGI_APPLICATION = 'web_management.asgi.application'
 DATABASES = {
 'default': {
 'ENGINE': 'django.db.backends.postgresql_psycopg2',
-'NAME': 'agv_database2',
-'USER': 'demo_user2',
-'PASSWORD': '123456',
+'NAME': 'agv_database',
+'USER': 'agv',
+'PASSWORD': '123456hadz',
 'HOST': 'localhost',
 'PORT': '5432',
 },

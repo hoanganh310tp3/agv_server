@@ -1,6 +1,6 @@
-import map_execution
-import abc
-import control_signal
+from . import map_execution
+from . import abc
+from . import control_signal
 
 class Population:
     def __init__(self,Inbound = 0,Outbound = 0,LoadWeigth = 0,TimeStart = 0):

@@ -6,7 +6,7 @@ class AgvIdentifySerializer(serializers.ModelSerializer):
     
     class Meta:
         model = agv_identify
-        fields = "__all__"
+        fields = ('agv_id', 'battery_capacity', 'maximum_load', 'guidance_type', 'load_transfer', 'operation' , 'connection')
  
 class AgvDataserializer(serializers.ModelSerializer):
     

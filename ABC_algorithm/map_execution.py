@@ -1,5 +1,5 @@
 import numpy
-import abc_parameters
+from . import abc_parameters
 import environ
 #Xử lý bản đồ và các yếu tố liên quan đến đường đi.
 env = environ.Env()
@@ -24,7 +24,7 @@ class Map:
     
     @staticmethod
     def returnMap():
-        f = open('Map3_test.csv','r')
+        f = open('Map3.csv','r')
         RoadList = list()
         for line in f:
             RoadList.append(list(line.strip().split(',')))
@@ -37,8 +37,12 @@ class Map:
             NodeLine = list()
             DirectionLine = list()
             for eachNode in eachLine:
-                NodeLine.append(str(eachNode).split(';')[0])
-                DirectionLine.append(str(eachNode).split(';')[1])
+                split_node = str(eachNode).split(';')
+                NodeLine.append(split_node[0])
+                if len(split_node) > 1:
+                    DirectionLine.append(split_node[1])
+                else:
+                    DirectionLine.append('')  # or some default value
             NodeList.append(NodeLine)
             DirectionList.append(DirectionLine)
         

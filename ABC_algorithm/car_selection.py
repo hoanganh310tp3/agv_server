@@ -1,11 +1,11 @@
 
-import agv_car
-import abc
-import population
-import selected_car_trip
-import convert
+from . import agv_car
+from . import abc
+from . import population
+from . import selected_car_trip
+from . import convert
+from . import requirement
 
-from requirement import Requirement
 from agv_management.active_agv import list_active_AGV
 
 #Lựa chọn xe AGV dựa trên các yêu cầu và điều kiện.

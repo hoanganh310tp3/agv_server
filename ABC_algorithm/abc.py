@@ -1,7 +1,7 @@
 import numpy
-import population
-import abc_parameters
-import cost_function 
+from . import population
+from . import abc_parameters
+from . import cost_function
 #Định nghĩa và triển khai thuật toán ABC (Artificial Bee Colony).
 class ABC:
     def __init__(self):

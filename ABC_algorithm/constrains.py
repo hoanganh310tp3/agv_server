@@ -1,9 +1,9 @@
-import schedule
-import position
-import agv_car
-import control_signal
-import road
-import convert
+from . import schedule
+from . import position
+from . import agv_car
+from . import control_signal
+from . import road
+from . import convert
 #Áp dụng các ràng buộc để đảm bảo an toàn và hiệu quả cho AGV
 class Constrains:
     def CollisionConstrain(TimeStart,Road):

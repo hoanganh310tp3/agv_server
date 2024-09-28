@@ -1,6 +1,6 @@
-import road
-import agv_car
-import constrains
+from . import road
+from . import agv_car
+from . import constrains
 #Tạo và quản lý các tín hiệu điều khiển cho AGV.
 class ControlSignal:
     

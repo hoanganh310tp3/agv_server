@@ -5,6 +5,7 @@ from agv_management.active_agv import is_agv_active
 
 
 def decodeThis(topic, payload):
+    print(f"Decoding message from topic {topic} with payload {payload}")
     topicName = topic.split("/")[0]
     carID = topic.split("/")[1]
 
@@ -29,6 +30,7 @@ def decodeThis(topic, payload):
 # below code is still used but not in use
 
 def deal_with_agv_data(payload):
+    print(f"Processing AGV data with payload {payload}")
     Data = AGVData(payload)
     Data.decodeBuffer()
     DBInsert.insertAGVData(Data)

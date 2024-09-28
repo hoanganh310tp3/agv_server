@@ -1,20 +1,14 @@
-import convert
-import abc
-import car_selection
-
-import requirement
-import agv_car
-import schedule
-
-#Quản lý lịch trình và các yêu cầu liên quan đến lịch trình.
-#Định nghĩa lớp Schedule và các phương thức liên quan.
-from agv_car import AGVCar
+from . import agv_car
+from . import convert
+from . import abc
+from . import requirement
+from . import car_selection
 
 class Schedule:
-    ListOfSchedule = []
+    ListOfSchedule = list()
     
     def __init__(self):
-        self.ListOfControlSignal = []
+        self.ListOfControlSignal = list()
         self.Order = ""
         self.Date = ""
         self.Name = "Transporting"
@@ -43,21 +37,20 @@ class Schedule:
         Schedule.TimeStart = Requirement.TimeStart
         Schedule.LoadWeight = Requirement.LoadWeight
         Schedule.ListOfControlSignal = SelectedCarTrip.Cost.ListOfControlSignal + SelectedTransportingTrip.ListOfControlSignal
-        Schedule.TimeEnd = convert.Convert.returnTimeStampToTime(convert.Convert.TimeToTimeStamp(Schedule.TimeStart) + convert.Convert.returnScheduleToTravellingTime(Schedule.ListOfControlSignal) + AGVCar.delayTime)
+        Schedule.TimeEnd = convert.Convert.returnTimeStampToTime(convert.Convert.TimeToTimeStamp(Schedule.TimeStart) + convert.Convert.returnScheduleToTravellingTime(Schedule.ListOfControlSignal) + agv_car.AGVCar.delayTime)
         Schedule.TotalEnergy = round(SelectedCarTrip.Cost.CostValue + SelectedTransportingTrip.CostValue, 3)
-        Schedule.Car.BatteryCapacity = round((float(Schedule.Car.BatteryCapacity) * AGVCar.MaxBatteryCapacity / 100 - float(Schedule.TotalEnergy)) * float(100) / (AGVCar.MaxBatteryCapacity), 2)
+        Schedule.Car.BatteryCapacity = round((float(Schedule.Car.BatteryCapacity)*agv_car.AGVCar.MaxBatteryCapacity/100 - float(Schedule.TotalEnergy))*float(100)/(agv_car.AGVCar.MaxBatteryCapacity), 2)
         Schedule.BatteryCapacity = Schedule.Car.BatteryCapacity
         Schedule.Car.ScheduleList.append(Schedule)
         return Schedule
-
+    
     @staticmethod
     def returnListOfSchedule():
-        ListOfRequirement = Requirement.ReadTimeTable()
-        NewABC = ABC()
-        CarSelection.InitialCar()
+        ListOfRequirement = requirement.Requirement.ReadTimeTable()
+        car_selection.CarSelection.InitialCar()
         for EachRequirement in ListOfRequirement:
-            NewABC = ABC()
-            SelectedCarTrip = CarSelection.returnSelectedCar(EachRequirement)
+            NewABC = abc.ABC()
+            SelectedCarTrip = car_selection.CarSelection.returnSelectedCar(EachRequirement)
             TimeStart = convert.Convert.TimeToTimeStamp(EachRequirement.TimeStart)
             if len(SelectedCarTrip.Cost.ListOfControlSignal) > 1:
                 TimeStart = convert.Convert.returnScheduleToTravellingTime(SelectedCarTrip.Cost.ListOfControlSignal) + TimeStart
@@ -67,24 +60,21 @@ class Schedule:
 
     @staticmethod
     def return_to_lot(startNode, stopNode, loadWeight, timeStart):
-        NewABC = ABC()
+        NewABC = abc.ABC()
         Route = NewABC.ABCAlgorithm(NewABC, startNode, stopNode, loadWeight, timeStart)
         return Route
 
     def get_car_id(self):
-        return self.Car.CarId
+        return self.Car.CarId # notice
 
     def get_total_distance(self):
-        TotalDistance = 0.0
-        for EachControlSignal in self.ListOfControlSignal:
-            TotalDistance += EachControlSignal.Road.Distance
-        return TotalDistance
-
+        return sum(EachControlSignal.Road.Distance for EachControlSignal in self.ListOfControlSignal)
+      
     def list_control_signal(self):
         ControlSignal = [self.get_car_id()]
         for EachControlSignal in self.ListOfControlSignal:
             ControlSignal.append([EachControlSignal.Road.FirstNode, EachControlSignal.Road.SecondNode, EachControlSignal.Velocity, EachControlSignal.Road.Distance, EachControlSignal.Road.Direction])
         
-        length = len(self.ListOfControlSignal) - 1
-        ControlSignal.append([self.ListOfControlSignal[length].Road.SecondNode, self.ListOfControlSignal[length].Road.SecondNode, 0, 0, 0])
+        last_control_signal = self.ListOfControlSignal[-1]
+        ControlSignal.append([last_control_signal.Road.SecondNode, last_control_signal.Road.SecondNode, 0, 0, 0])
         return ControlSignal

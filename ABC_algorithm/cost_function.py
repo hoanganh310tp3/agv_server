@@ -1,4 +1,4 @@
-import energy_consumption
+from . import energy_consumption
 
 class CostFunction:
     @staticmethod

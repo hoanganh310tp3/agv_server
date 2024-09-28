@@ -78,8 +78,8 @@ class AGVData():
 
 class agv_data(models.Model):
     data_id = models.BigAutoField(primary_key=True) 
-    car_id = models.ForeignKey(agv_identify, on_delete=models.CASCADE) #many-to-one relationship test
-    #car_id = models.IntegerField()
+    # car_id = models.ForeignKey(agv_identify, on_delete=models.CASCADE) #many-to-one relationship test
+    car_id = models.IntegerField()
     agv_state = models.IntegerField()
     agv_speed = models.FloatField()
     distance = models.FloatField()
@@ -98,8 +98,8 @@ class agv_data(models.Model):
 class agv_error(models.Model):
     error_id = models.IntegerField(default= 0, unique= True)
     timestamp = models.DateTimeField(default= timezone.now)
-    car_id = models.ForeignKey(agv_identify, on_delete=models.CASCADE) #many-to-one relationship test 
-    #car_id = models.IntegerField() 
+    # car_id = models.ForeignKey(agv_identify, on_delete=models.CASCADE) #many-to-one relationship test 
+    car_id = models.IntegerField() 
     error_msg = models.CharField(max_length=16, default='')
     previous_waypoint = models.IntegerField()
     next_waypoint = models.IntegerField()  

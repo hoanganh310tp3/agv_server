@@ -1,5 +1,5 @@
-import population
-import agv_car
+from . import population
+from . import agv_car
 
 class SelectedCarTrip:
 

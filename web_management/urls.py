@@ -15,14 +15,26 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path,re_path,include
-from agv_management import views
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from agv_management.views import AgvIdentifyViewSet
+from requests_management.views import OrderView, ScheduleView
+from material_management.views import MaterialView
 
+router = DefaultRouter()
+router.register(r'agv_identify', AgvIdentifyViewSet, 'Manage AGV')
+router.register(r'orders', OrderView, 'Manage Orders')
+router.register(r'schedule', ScheduleView, 'Manage Schedule')
+router.register(r'material', MaterialView, 'Manage Material')
 
 urlpatterns = [
-    path("api/", include('users_management.urls')),
-    path("", include("agv_management.urls")),
+    #Non-API related rows
     path('admin/', admin.site.urls),
-    re_path(r'^api/agv_management/$', views.agv_management_list),
-    re_path(r'^api/agv_management/([0-9])$', views.agv_management_detail),
+    path('home/',include('home.urls')),
+    path('requests_management/',include('requests_management.urls')),
+    path('agv_management/', include('agv_management.urls')),
+    
+    #API related rows
+    path("api/", include('users_management.urls')),
+    path('api/', include(router.urls)),
 ]

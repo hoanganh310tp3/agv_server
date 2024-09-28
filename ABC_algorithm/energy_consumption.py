@@ -1,4 +1,4 @@
-import agv_car
+from . import agv_car
 #Tính toán năng lượng tiêu thụ của AGV.
 class EnergyConsumption:   
 
