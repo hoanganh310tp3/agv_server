@@ -8,8 +8,10 @@ class Convert:
 # Tạo đối tượng datetime sử dụng năm, tháng, và ngày hiện tại cùng với giờ, phút, giây từ chuỗi Time.
 # Trả về giá trị timestamp tương ứng với thời gian đó.
     def TimeToTimeStamp(Time):
+        if isinstance(Time, float):
+            return Time
         Temp = Time.split(":")
-        Date = datetime(datetime.now().year,datetime.now().month,datetime.now().day,int(Temp[0]),int(Temp[1]),int(Temp[2]))
+        Date = datetime(datetime.now().year, datetime.now().month, datetime.now().day, int(Temp[0]), int(Temp[1]), int(Temp[2]))
         return datetime.timestamp(Date)
     
     @staticmethod

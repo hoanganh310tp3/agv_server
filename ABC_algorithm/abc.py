@@ -142,4 +142,4 @@ class ABC:
             self.ScoutBees(self)
             self.BestSolution(self)
         return self.BestCost
-            
+  

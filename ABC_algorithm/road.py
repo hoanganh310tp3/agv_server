@@ -20,14 +20,14 @@ class Road:
 
 #Code mới 
     @staticmethod
-    def GetDirection(PreviousNode, NextNode):
-        direction = map_topology.MapTopology.Direction[int(PreviousNode)][int(NextNode)]
-        return int(direction) if direction != '' else 0  # Return 0 for empty strings
+    def GetDistance(PreviousNode, NextNode):
+        return float(map_topology.MapTopology.Map[int(PreviousNode)][int(NextNode)])
     
     # Phương thức tĩnh để lấy hướng di chuyển giữa hai nút từ bản đồ topology
     @staticmethod
     def GetDirection(PreviousNode, NextNode):
-        return int(map_topology.MapTopology.Direction[int(PreviousNode)][int(NextNode)])
+        direction = map_topology.MapTopology.Direction[int(PreviousNode)][int(NextNode)]
+        return int(direction) if direction != '' else 0
  
     # Phương thức tĩnh để tạo danh sách các đối tượng Road từ danh sách các nút
     @staticmethod
