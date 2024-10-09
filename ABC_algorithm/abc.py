@@ -133,7 +133,7 @@ class ABC:
 # Sau khi đạt đến số lần lặp tối đa (MaxIt), nó trả về giải pháp tốt nhất tìm được.
     # Đang test nên tạm thời comment out ràng buộc lập lịch
     # def ABCAlgorithm(self,Inbound,Outbound,LoadWeight,TimeStart):
-    def ABCAlgorithm(self, Inbound, Outbound, LoadWeight, TimeStart, ignore_scheduling=False):
+    def ABCAlgorithm(self,Inbound,Outbound,LoadWeight,TimeStart, ignore_scheduling=False):
         for i in range(abc_parameters.ABCSetting.MaxIt):
             self.CreateInitialPopulation(self,Inbound,Outbound,LoadWeight,TimeStart, ignore_scheduling)
             self.RecruitedBees(self)

@@ -7,15 +7,13 @@ import networkx as nx
 import numpy as np
 import matplotlib.collections as mc
 from matplotlib.table import Table
-
+# đã mô phỏng được việc lập lịch nhưng  có 2 cột hiển thij các node nhưng vận tốc vẫn còn khác xa với thực tế 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-# đã mô phỏng được việc lập lịch, vận tốc đã sát với thực tế , nhưng vẫn còn vấn đề ở việc va chạm 
 
 from ABC_algorithm import map_execution, convert, agv_car, abc, constrains, control_signal, requirement, road
 
 class AGVPathSimulatorWithCollision:
     def __init__(self):
-        # Purpose: Initialize the AGV path simulator with collision detection
         self.road_list, self.direction_list = map_execution.Map.returnMap()
         self.G = self.create_graph_from_matrix(self.road_list)
         self.agv1_schedule = self.get_user_input_schedule("AGV1")
@@ -25,10 +23,6 @@ class AGVPathSimulatorWithCollision:
         self.agv2 = agv_car.AGVCar("AGV2")
         self.agv1_visited_nodes = []
         self.agv2_visited_nodes = []
-        self.agv1_current_velocity = 0
-        self.agv2_current_velocity = 0
-        self.agv1_path_history = []
-        self.agv2_path_history = []
 
         # Log để kiểm tra road_list
         print("Sample distances from road_list:")
@@ -38,7 +32,6 @@ class AGVPathSimulatorWithCollision:
                     print(f"Distance from node {i} to node {j}: {self.road_list[i][j]} meters")
 
     def create_graph_from_matrix(self, matrix):
-        # Purpose: Create a graph representation from the given matrix
         G = nx.DiGraph()
         num_nodes = len(matrix)
         for i in range(num_nodes):
@@ -50,7 +43,6 @@ class AGVPathSimulatorWithCollision:
         return G
 
     def get_user_input_schedule(self, agv_name):
-        # Purpose: Get user input for AGV schedule
         print(f"Enter schedule data for {agv_name}:")
         schedule_data = {}
         schedule_data['Order'] = input("Order: ")
@@ -62,7 +54,6 @@ class AGVPathSimulatorWithCollision:
         return schedule_data
 
     def animate_agv_movements(self):
-        # Purpose: Animate the movements of AGVs on the graph
         pos = nx.spring_layout(self.G)
         fig = plt.figure(figsize=(12, 10))
         gs = fig.add_gridspec(3, 1, height_ratios=[0.1, 4, 1])
@@ -93,7 +84,6 @@ class AGVPathSimulatorWithCollision:
                        agv2_start_time + convert.Convert.returnScheduleToTravellingTime(self.agv2_path.ListOfControlSignal))
 
         def update(frame):
-            # Purpose: Update the animation frame
             current_time = start_time + frame
             ax.clear()
             ax_table.clear()
@@ -108,14 +98,14 @@ class AGVPathSimulatorWithCollision:
             edge_labels = {(u, v): d['weight'] for (u, v, d) in self.G.edges(data=True) if d['weight'] != 0}
             nx.draw_networkx_edge_labels(self.G, pos, edge_labels=edge_labels, font_color='red', ax=ax)
             
-            agv1_pos, self.agv1_current_velocity = self.get_agv_position_and_velocity(self.agv1_path, current_time - agv1_start_time, self.agv1_current_velocity)
-            agv2_pos, self.agv2_current_velocity = self.get_agv_position_and_velocity(self.agv2_path, current_time - agv2_start_time, self.agv2_current_velocity)
+            agv1_pos, agv1_velocity = self.get_agv_position_and_velocity(self.agv1_path, current_time - agv1_start_time)
+            agv2_pos, agv2_velocity = self.get_agv_position_and_velocity(self.agv2_path, current_time - agv2_start_time)
             
-            # Cập nhật lịch sử đường đi
-            if current_time >= agv1_start_time and agv1_pos[0] != self.agv1_path_history[-1] if self.agv1_path_history else True:
-                self.agv1_path_history.append(agv1_pos[0])
-            if current_time >= agv2_start_time and agv2_pos[0] != self.agv2_path_history[-1] if self.agv2_path_history else True:
-                self.agv2_path_history.append(agv2_pos[0])
+            # Cập nhật danh sách các nút đã đi qua
+            if current_time >= agv1_start_time and agv1_pos[0] not in self.agv1_visited_nodes:
+                self.agv1_visited_nodes.append(agv1_pos[0])
+            if current_time >= agv2_start_time and agv2_pos[0] not in self.agv2_visited_nodes:
+                self.agv2_visited_nodes.append(agv2_pos[0])
             
             # Vẽ đường đi của AGV1
             if current_time >= agv1_start_time:
@@ -123,7 +113,7 @@ class AGVPathSimulatorWithCollision:
                 nx.draw_networkx_edges(self.G, pos, edgelist=agv1_path_edges, edge_color='blue', width=2, ax=ax)
                 ab1 = AnnotationBbox(imagebox1, pos[agv1_pos[0]], frameon=False)
                 ax.add_artist(ab1)
-                ax.text(pos[agv1_pos[0]][0], pos[agv1_pos[0]][1] + 0.1, f"AGV1: {self.agv1_current_velocity:.2f} m/s", ha='center', va='bottom')
+                ax.text(pos[agv1_pos[0]][0], pos[agv1_pos[0]][1] + 0.1, f"AGV1: {agv1_velocity:.2f} m/s", ha='center', va='bottom')
             
             # Vẽ đường đi của AGV2
             if current_time >= agv2_start_time:
@@ -131,7 +121,7 @@ class AGVPathSimulatorWithCollision:
                 nx.draw_networkx_edges(self.G, pos, edgelist=agv2_path_edges, edge_color='green', width=2, ax=ax)
                 ab2 = AnnotationBbox(imagebox2, pos[agv2_pos[0]], frameon=False)
                 ax.add_artist(ab2)
-                ax.text(pos[agv2_pos[0]][0], pos[agv2_pos[0]][1] - 0.1, f"AGV2: {self.agv2_current_velocity:.2f} m/s", ha='center', va='top')
+                ax.text(pos[agv2_pos[0]][0], pos[agv2_pos[0]][1] - 0.1, f"AGV2: {agv2_velocity:.2f} m/s", ha='center', va='top')
             
             if current_time >= agv1_start_time and current_time >= agv2_start_time:
                 if self.check_collision(agv1_pos, agv2_pos):
@@ -140,13 +130,13 @@ class AGVPathSimulatorWithCollision:
             
             ax.set_title(f"Time: {convert.Convert.returnTimeStampToTime(current_time)}")
 
-            # Tạo bảng hiển thị vận tốc và lịch sử đường đi
+            # Tạo bảng hiển thị vận tốc và các nút đã đi qua
             table_data = [
-                ['AGV1 Velocity', 'AGV2 Velocity', 'AGV1 Path History', 'AGV2 Path History'],
-                [f'{self.agv1_current_velocity:.2f} m/s' if current_time >= agv1_start_time else 'Not started',
-                 f'{self.agv2_current_velocity:.2f} m/s' if current_time >= agv2_start_time else 'Not started',
-                 ' -> '.join(map(str, self.agv1_path_history)),
-                 ' -> '.join(map(str, self.agv2_path_history))]
+                ['AGV1 Velocity', 'AGV2 Velocity', 'AGV1 Visited Nodes', 'AGV2 Visited Nodes'],
+                [f'{agv1_velocity:.2f} m/s' if current_time >= agv1_start_time else 'Not started',
+                 f'{agv2_velocity:.2f} m/s' if current_time >= agv2_start_time else 'Not started',
+                 ', '.join(map(str, self.agv1_visited_nodes)),
+                 ', '.join(map(str, self.agv2_visited_nodes))]
             ]
             table = ax_table.table(cellText=table_data, loc='center', cellLoc='center')
             table.auto_set_font_size(False)
@@ -164,7 +154,6 @@ class AGVPathSimulatorWithCollision:
         plt.show()
 
     def handle_collision(self, current_time, agv1_pos, agv2_pos):
-        # Purpose: Handle collision between AGVs
         # Apply collision constraints
         road1 = self.get_current_road(agv1_pos)
         road2 = self.get_current_road(agv2_pos)
@@ -177,11 +166,9 @@ class AGVPathSimulatorWithCollision:
         self.update_agv_path(self.agv2_path, control_signal2, current_time)
 
     def get_current_road(self, agv_pos):
-        # Purpose: Get the current road for an AGV position
         return road.Road(agv_pos[0], agv_pos[1], self.calculate_real_distance(agv_pos[0], agv_pos[1]))
 
     def update_agv_path(self, agv_path, new_control_signal, current_time):
-        # Purpose: Update the AGV path with a new control signal
         # Find the index where the new control signal should be inserted
         insert_index = 0
         for i, signal in enumerate(agv_path.ListOfControlSignal):
@@ -194,11 +181,9 @@ class AGVPathSimulatorWithCollision:
         self.adjust_remaining_path(agv_path, insert_index + 1, current_time)
 
     def get_signal_end_time(self, signal, start_time):
-        # Purpose: Calculate the end time of a control signal
         return start_time + signal.Road.Distance / signal.Velocity
 
     def adjust_remaining_path(self, agv_path, start_index, current_time):
-        # Purpose: Adjust the remaining path after a collision
         for i in range(start_index, len(agv_path.ListOfControlSignal)):
             signal = agv_path.ListOfControlSignal[i]
             new_signal = control_signal.ControlSignal(signal.Road)
@@ -206,58 +191,20 @@ class AGVPathSimulatorWithCollision:
             new_signal.Velocity = max(new_signal.Velocity, agv_car.AGVCar.MinAccelaration)
             agv_path.ListOfControlSignal[i] = new_signal
 
-    def get_agv_position_and_velocity(self, path, elapsed_time, current_velocity):
-        # Purpose: Calculate the current position and velocity of an AGV
+    def get_agv_position_and_velocity(self, path, elapsed_time):
         if elapsed_time < 0:
             return (path.ListOfControlSignal[0].Road.FirstNode, path.ListOfControlSignal[0].Road.FirstNode, 0), 0
         
         total_time = 0
-        distance_travelled = 0
         for signal in path.ListOfControlSignal:
-            acceleration = min(agv_car.AGVCar.MaxAccelaration, 
-                               max(0, (agv_car.AGVCar.MaxVelocity - current_velocity) / agv_car.AGVCar.delayTime))
-            
-            if acceleration == 0 or current_velocity >= agv_car.AGVCar.MaxVelocity:
-                # AGV is already at max speed
-                time_at_max_speed = signal.Road.Distance / agv_car.AGVCar.MaxVelocity
-                if total_time + time_at_max_speed > elapsed_time:
-                    t = elapsed_time - total_time
-                    distance = agv_car.AGVCar.MaxVelocity * t
-                    progress = (distance_travelled + distance) / signal.Road.Distance
-                    return (signal.Road.FirstNode, signal.Road.SecondNode, progress), agv_car.AGVCar.MaxVelocity
-                total_time += time_at_max_speed
-                distance_travelled += signal.Road.Distance
-                current_velocity = agv_car.AGVCar.MaxVelocity
-                continue
-
-            time_to_max_speed = (agv_car.AGVCar.MaxVelocity - current_velocity) / acceleration
-            
-            if total_time + time_to_max_speed > elapsed_time:
-                # AGV is still accelerating
-                t = elapsed_time - total_time
-                new_velocity = min(agv_car.AGVCar.MaxVelocity, current_velocity + acceleration * t)
-                distance = current_velocity * t + 0.5 * acceleration * t * t
-                progress = (distance_travelled + distance) / signal.Road.Distance
-                return (signal.Road.FirstNode, signal.Road.SecondNode, progress), new_velocity
-            
-            distance_at_max_speed = signal.Road.Distance - (current_velocity * time_to_max_speed + 0.5 * acceleration * time_to_max_speed * time_to_max_speed)
-            time_at_max_speed = distance_at_max_speed / agv_car.AGVCar.MaxVelocity
-            
-            if total_time + time_to_max_speed + time_at_max_speed > elapsed_time:
-                # AGV reaches max speed during this segment
-                t = elapsed_time - (total_time + time_to_max_speed)
-                distance = (current_velocity * time_to_max_speed + 0.5 * acceleration * time_to_max_speed * time_to_max_speed) + agv_car.AGVCar.MaxVelocity * t
-                progress = (distance_travelled + distance) / signal.Road.Distance
-                return (signal.Road.FirstNode, signal.Road.SecondNode, progress), agv_car.AGVCar.MaxVelocity
-            
-            total_time += time_to_max_speed + time_at_max_speed
-            distance_travelled += signal.Road.Distance
-            current_velocity = agv_car.AGVCar.MaxVelocity
-        
-        return (path.ListOfControlSignal[-1].Road.SecondNode, path.ListOfControlSignal[-1].Road.SecondNode, 1), agv_car.AGVCar.MaxVelocity
+            travel_time = signal.Road.Distance / signal.Velocity
+            if total_time + travel_time > elapsed_time:
+                progress = (elapsed_time - total_time) / travel_time
+                return (signal.Road.FirstNode, signal.Road.SecondNode, progress), signal.Velocity
+            total_time += travel_time
+        return (path.ListOfControlSignal[-1].Road.SecondNode, path.ListOfControlSignal[-1].Road.SecondNode, 1), path.ListOfControlSignal[-1].Velocity
 
     def check_collision(self, pos1, pos2):
-        # Purpose: Check if there's a collision between two AGV positions
         if pos1[0] == pos2[0] and pos1[1] == pos2[1]:
             return True
         if pos1[0] == pos2[1] and pos1[1] == pos2[0]:
@@ -265,7 +212,6 @@ class AGVPathSimulatorWithCollision:
         return False
 
     def find_new_path(self, start_node, end_node, current_time, load_weight):
-        # Purpose: Find a new path for an AGV
         req = requirement.Requirement(TimeStart=current_time, Inbound=start_node, Outbound=end_node, Weight=load_weight)
         new_path = self.abc_algorithm.ABCAlgorithm(self.abc_algorithm, req.Inbound, req.Outbound, req.LoadWeight, convert.Convert.TimeToTimeStamp(req.TimeStart))
         
@@ -279,13 +225,11 @@ class AGVPathSimulatorWithCollision:
         return new_path
 
     def calculate_real_distance(self, node1, node2):
-        # Purpose: Calculate the real distance between two nodes. đoạn code này có thể bỏ qua vì nó chỉ là check đơn vị đường đi
         distance = self.road_list[node1][node2]
         print(f"Calculated distance from node {node1} to node {node2}: {distance} meters")
         return distance
 
     def get_travelled_path(self, path, elapsed_time):
-        # Purpose: Get the travelled path of an AGV
         travelled_edges = []
         total_time = 0
         for signal in path.ListOfControlSignal:

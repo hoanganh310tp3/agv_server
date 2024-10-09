@@ -87,6 +87,7 @@ class Map:
         NodeList = [[int(node) if node.isdigit() else 100000 for node in row] for row in NodeList]
         
         return (NodeList, DirectionList)
+        
 
 
     

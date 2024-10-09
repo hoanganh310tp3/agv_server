@@ -9,7 +9,6 @@ import matplotlib.collections as mc
 from matplotlib.table import Table
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-# đã mô phỏng được việc lập lịch, vận tốc đã sát với thực tế , nhưng vẫn còn vấn đề ở việc va chạm 
 
 from ABC_algorithm import map_execution, convert, agv_car, abc, constrains, control_signal, requirement, road
 
@@ -164,47 +163,57 @@ class AGVPathSimulatorWithCollision:
         plt.show()
 
     def handle_collision(self, current_time, agv1_pos, agv2_pos):
-        # Purpose: Handle collision between AGVs
-        # Apply collision constraints
+        # Purpose: Handle collision between AGVs more effectively
         road1 = self.get_current_road(agv1_pos)
         road2 = self.get_current_road(agv2_pos)
         
-        control_signal1 = constrains.Constrains.CollisionConstrain(current_time, road1)
-        control_signal2 = constrains.Constrains.CollisionConstrain(current_time, road2)
+        # Apply collision constraints with more consideration
+        control_signal1 = constrains.Constrains.CollisionConstrain(current_time, road1, ignore_scheduling=False)
+        control_signal2 = constrains.Constrains.CollisionConstrain(current_time, road2, ignore_scheduling=False)
         
-        # Update paths with new control signals
-        self.update_agv_path(self.agv1_path, control_signal1, current_time)
-        self.update_agv_path(self.agv2_path, control_signal2, current_time)
+        # Adjust velocities based on the constraints
+        self.adjust_agv_path(self.agv1_path, control_signal1, current_time)
+        self.adjust_agv_path(self.agv2_path, control_signal2, current_time)
+
+    def adjust_agv_path(self, agv_path, new_control_signal, current_time):
+        # Purpose: Adjust AGV path considering new control signal
+        insert_index = self.find_insert_index(agv_path, current_time)
+        
+        # If the new control signal suggests a different road, plan a new path
+        if new_control_signal.Road.FirstNode == 0 and new_control_signal.Road.SecondNode == 0:
+            new_path = self.find_new_path(agv_path.ListOfControlSignal[insert_index].Road.FirstNode,
+                                          agv_path.ListOfControlSignal[-1].Road.SecondNode,
+                                          current_time,
+                                          agv_path.LoadWeight)
+            agv_path.ListOfControlSignal = agv_path.ListOfControlSignal[:insert_index] + new_path.ListOfControlSignal
+        else:
+            # Adjust velocity of the current segment
+            agv_path.ListOfControlSignal[insert_index].Velocity = new_control_signal.Velocity
+        
+        # Adjust remaining path
+        self.adjust_remaining_path(agv_path, insert_index + 1, current_time)
+
+    def find_insert_index(self, agv_path, current_time):
+        # Purpose: Find the correct index to insert or modify the control signal
+        total_time = 0
+        for i, signal in enumerate(agv_path.ListOfControlSignal):
+            travel_time = signal.Road.Distance / signal.Velocity
+            if total_time + travel_time > current_time:
+                return i
+            total_time += travel_time
+        return len(agv_path.ListOfControlSignal) - 1
+
+    def adjust_remaining_path(self, agv_path, start_index, current_time):
+        # Purpose: Adjust the remaining path after a collision or constraint application
+        for i in range(start_index, len(agv_path.ListOfControlSignal)):
+            signal = agv_path.ListOfControlSignal[i]
+            new_signal = constrains.Constrains.CollisionConstrain(current_time, signal.Road, ignore_scheduling=False)
+            agv_path.ListOfControlSignal[i] = new_signal
+            current_time += signal.Road.Distance / new_signal.Velocity
 
     def get_current_road(self, agv_pos):
         # Purpose: Get the current road for an AGV position
         return road.Road(agv_pos[0], agv_pos[1], self.calculate_real_distance(agv_pos[0], agv_pos[1]))
-
-    def update_agv_path(self, agv_path, new_control_signal, current_time):
-        # Purpose: Update the AGV path with a new control signal
-        # Find the index where the new control signal should be inserted
-        insert_index = 0
-        for i, signal in enumerate(agv_path.ListOfControlSignal):
-            if current_time < self.get_signal_end_time(signal, current_time):
-                insert_index = i
-                break
-        
-        # Insert the new control signal and adjust the rest of the path
-        agv_path.ListOfControlSignal.insert(insert_index, new_control_signal)
-        self.adjust_remaining_path(agv_path, insert_index + 1, current_time)
-
-    def get_signal_end_time(self, signal, start_time):
-        # Purpose: Calculate the end time of a control signal
-        return start_time + signal.Road.Distance / signal.Velocity
-
-    def adjust_remaining_path(self, agv_path, start_index, current_time):
-        # Purpose: Adjust the remaining path after a collision
-        for i in range(start_index, len(agv_path.ListOfControlSignal)):
-            signal = agv_path.ListOfControlSignal[i]
-            new_signal = control_signal.ControlSignal(signal.Road)
-            new_signal.Velocity = min(new_signal.Velocity, agv_car.AGVCar.MaxVelocity)
-            new_signal.Velocity = max(new_signal.Velocity, agv_car.AGVCar.MinAccelaration)
-            agv_path.ListOfControlSignal[i] = new_signal
 
     def get_agv_position_and_velocity(self, path, elapsed_time, current_velocity):
         # Purpose: Calculate the current position and velocity of an AGV

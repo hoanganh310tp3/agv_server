@@ -10,7 +10,7 @@ class Constrains:
 # Road: Đoạn đường mà AGV sẽ di chuyển, bao gồm các điểm FirstNode (điểm bắt đầu) và SecondNode (điểm kết thúc).
 # Test: Chuyển đổi TimeStart từ định dạng timestamp sang thời gian thực để kiểm tra.
 # ControlSignal: Tạo đối tượng ControlSignal để điều chỉnh tốc độ và hướng di chuyển của AGV.
-    def CollisionConstrain(TimeStart,Road):
+    def CollisionConstrain(TimeStart,Road, ignore_scheduling=False):
         Test = convert.Convert.returnTimeStampToTime(TimeStart)
         
         ControlSignal = control_signal.ControlSignal(Road)
@@ -19,7 +19,7 @@ class Constrains:
 # Vòng lặp kiểm tra từng lịch trình EachSchedule để lấy vị trí của xe tại thời điểm TimeStart.
 # Nếu returnPosition.FirstNode != "", có nghĩa là có xe AGV đang di chuyển trên đoạn đường liên quan, và cần kiểm tra các ràng buộc.
         
-        if(len(schedule.Schedule.ListOfSchedule) > 0):
+        if not ignore_scheduling and len(schedule.Schedule.ListOfSchedule) > 0:
             for EachSchedule in schedule.Schedule.ListOfSchedule:
                 returnPosition = position.Position.returnPosition(TimeStart,EachSchedule)
                 if(returnPosition.FirstNode != ""):

@@ -45,19 +45,29 @@ class ABCPathFinder:
         
         def update(num):
             ax.clear()
-            nx.draw(self.G, pos, with_labels=True, node_color='lightblue', node_size=500, font_size=10, font_weight='bold', ax=ax)
-            edge_labels = nx.get_edge_attributes(self.G, 'weight')
+            
+            # Vẽ đồ thị mà không có các cạnh có trọng số 0
+            edges = [(u, v) for (u, v, d) in self.G.edges(data=True) if d['weight'] != 0]
+            nx.draw_networkx_nodes(self.G, pos, node_color='lightblue', node_size=500, ax=ax)
+            nx.draw_networkx_edges(self.G, pos, edgelist=edges, ax=ax, edge_color='gray', alpha=0.5)
+            nx.draw_networkx_labels(self.G, pos, font_size=10, font_weight='bold', ax=ax)
+            
+            # Vẽ nhãn cạnh chỉ cho các cạnh có trọng số khác 0
+            edge_labels = {(u, v): d['weight'] for (u, v, d) in self.G.edges(data=True) if d['weight'] != 0}
             nx.draw_networkx_edge_labels(self.G, pos, edge_labels=edge_labels, font_color='red', ax=ax)
+            # Vẽ đường đi hiện tại
+            current_path = path[:num+1]
+            current_edges = list(zip(current_path, current_path[1:]))
+            nx.draw_networkx_edges(self.G, pos, edgelist=current_edges, edge_color='blue', width=2, ax=ax)
             
-            path_edges = list(zip(path[:num+1], path[1:num+2]))
-            nx.draw_networkx_edges(self.G, pos, edgelist=path_edges, edge_color='blue', width=2, ax=ax)
-            
+            # Vẽ xe
             if num < len(path):
                 car_pos = pos[path[num]]
                 ab = AnnotationBbox(imagebox, car_pos, frameon=False)
                 ax.add_artist(ab)
             
             plt.title("AGV Moving Along the Path Found by ABC Algorithm")
+            ax.set_axis_off()
         
         ani = FuncAnimation(fig, update, frames=len(path), repeat=False, interval=1000)
         plt.show()
@@ -72,7 +82,14 @@ if __name__ == "__main__":
 
     if path:
         print("Path found by ABC algorithm:", path)
-        print("Path cost:", sum(path_finder.G[u][v]['weight'] for u, v in zip(path[:-1], path[1:])))
+        # Thêm các dòng debug này trước đoạn mã gây ra lỗi
+        print("Debug: Path =", path)
+        for u, v in zip(path[:-1], path[1:]):
+            print(f"Debug: Edge ({u}, {v}) weight =", path_finder.G[u][v]['weight'], type(path_finder.G[u][v]['weight']))
+
+        # Sau đó, tính toán và in chi phí đường đi
+        path_cost = sum(float(path_finder.G[u][v]['weight']) for u, v in zip(path[:-1], path[1:]))
+        print("Path cost:", path_cost)
         path_finder.animate_path(path)
     else:
         print("No path found.")

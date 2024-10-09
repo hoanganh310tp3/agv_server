@@ -4,6 +4,7 @@ class ABCSetting:
     # nCount = 60
     # Number of Decision Variables. Đây là số lượng biến quyết định (Decision Variables) cho mỗi giải pháp. Mỗi giải pháp trong quần thể sẽ có 10 biến quyết định cần được tối ưu hóa. Ví dụ, nếu đang giải bài toán tối ưu hóa với nhiều biến, số lượng biến là 10.
     nVar = 10
+    # nVar = 20
     # Maximum Number of Iterations. Đây là số lần lặp tối đa mà thuật toán ABC sẽ thực hiện trước khi dừng lại. Sau khi đạt đến số lần lặp này, thuật toán sẽ dừng ngay cả khi chưa tìm được giải pháp tối ưu.
     MaxIt = 50
     # MaxIt = 100
