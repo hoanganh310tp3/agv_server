@@ -1,9 +1,8 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from rest_framework import viewsets
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import IsAuthenticated
 
-#Below code is totally changed and based on the code_anh_minh
 
 from .models import agv_data, agv_identify
 from .serializers import AgvIdentifySerializer, AgvDataserializer
@@ -12,13 +11,13 @@ from .serializers import AgvIdentifySerializer, AgvDataserializer
 class AgvIdentifyViewSet(viewsets.ModelViewSet):
     serializer_class = AgvIdentifySerializer
     queryset = agv_identify.objects.all()
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
 
 # For Agv_data websocket 
 class AgvDataViewSet(viewsets.ModelViewSet):
     serializer_class = AgvDataserializer
     queryset = agv_data.objects.all()
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     
 def index(request):
     return render(request, "agv_management/index.html")

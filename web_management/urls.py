@@ -16,21 +16,21 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
+from rest_framework import routers
 from agv_management.views import AgvIdentifyViewSet
 from requests_management.views import OrderView, ScheduleView
 from material_management.views import MaterialView
 
-router = DefaultRouter()
-router.register(r'agv_identify', AgvIdentifyViewSet, 'Manage AGV')
+
+router = routers.DefaultRouter()
+router.register(r'agv_identify', AgvIdentifyViewSet, 'Manage AGVs')
 router.register(r'orders', OrderView, 'Manage Orders')
-router.register(r'schedule', ScheduleView, 'Manage Schedule')
-router.register(r'material', MaterialView, 'Manage Material')
+router.register(r'schedule', ScheduleView, 'Manage Schedules')
+router.register(r'material', MaterialView, 'Manage Materials')
 
 urlpatterns = [
     #Non-API related rows
     path('admin/', admin.site.urls),
-    path('home/',include('home.urls')),
     path('requests_management/',include('requests_management.urls')),
     path('agv_management/', include('agv_management.urls')),
     

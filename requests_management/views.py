@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from rest_framework import viewsets, generics, status
 from django.http import HttpResponse
-
+from .schedule import schedule_agv
 from .serializers import OrderSerializer, ScheduleSerializer, CreateListModelMixin
 from .models import order_data, schedule_data
 # from ManageRequests.schedule import schedule_agvs

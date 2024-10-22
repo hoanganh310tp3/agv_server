@@ -1,3 +1,6 @@
+from django.db import models
+
+# Create your models here.
 from django.contrib.auth.models import User
 from django.db import models
 from django.utils import timezone
@@ -11,20 +14,14 @@ class agv_identify(models.Model):
         ('image_processing','image_processing')
     )
     
-    LOAD_TRANSFER = (
-        ('Automatic', 'Automatic'),
-        ('Manual ', 'Manual')
-    )
     
     agv_id = models.IntegerField(primary_key=True, blank=False)  
-    maximum_speed = models.IntegerField(default= 0)
-    parking_lot = models.IntegerField(default= 0, blank=False)
+    max_speed = models.IntegerField(default= 0)
     battery_capacity = models.IntegerField(default= 0)
-    maximum_load = models.IntegerField(default=0)
+    max_load = models.IntegerField(default=0)
     guidance_type = models.CharField(max_length=255, blank=True, choices= GUIDANCE_TYPE)  
-    load_transfer = models.CharField(max_length=255, blank=True, choices= LOAD_TRANSFER)
-    operation = models.BooleanField(default= True)  
-    connection = models.BooleanField(default= True)
+    is_busy = models.BooleanField(default= True)  
+    is_connected = models.BooleanField(default= True)
 
     def __str__(self):
         return "Vehicle ID: {ID}".format(ID= self.agv_id) + "." + "Operation: {state}".format(state = self.operation) + "Connection: {state}".format(state = self.connection)
@@ -79,27 +76,22 @@ class AGVData():
 class agv_data(models.Model):
     data_id = models.BigAutoField(primary_key=True) 
     # car_id = models.ForeignKey(agv_identify, on_delete=models.CASCADE) #many-to-one relationship test
-    car_id = models.IntegerField()
+    car_id = models.ForeignKey(agv_identify, on_delete= models.CASCADE)
     agv_state = models.IntegerField()
     agv_speed = models.FloatField()
-    distance = models.FloatField()
     agv_battery = models.FloatField()
-    agv_position = AGVData.Position
+    current_position = AGVData.Position
     previous_waypoint = models.IntegerField()
     next_waypoint = models.IntegerField()
     time_stamp = models.DateTimeField(blank= True)
-    distance_sum = models.FloatField()
-    battery_consumption = models.IntegerField()
     
-
     def __str__(self):
         return "Data ID: {ID}".format(ID = self.data_id)
     
 class agv_error(models.Model):
     error_id = models.IntegerField(default= 0, unique= True)
     timestamp = models.DateTimeField(default= timezone.now)
-    # car_id = models.ForeignKey(agv_identify, on_delete=models.CASCADE) #many-to-one relationship test 
-    car_id = models.IntegerField() 
+    car_id = models.ForeignKey(agv_identify, on_delete=models.CASCADE) #many-to-one relationship 
     error_msg = models.CharField(max_length=16, default='')
     previous_waypoint = models.IntegerField()
     next_waypoint = models.IntegerField()  
@@ -122,5 +114,4 @@ class AGVError():
         self.orderNum = int.from_bytes(self.bufferAGVError[5], byteorder= 'little')
         self.prevNode = int.from_bytes(self.bufferAGVError[6], byteorder= 'little')
         self.nextNode = int.from_bytes(self.bufferAGVError[7], byteorder= 'little')
-
 

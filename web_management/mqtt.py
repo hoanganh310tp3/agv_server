@@ -4,7 +4,7 @@ import os
 import django
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "web_management.settings")
-django.setup()
+
 
 def subcribe():
     client.subscribe("AGV_Data/#")
@@ -36,13 +36,12 @@ def on_disconnect(client, userdata, rc=0):
     
 def on_log(client, userdata, level, string): 
     print(string)
+    
+def start_mqtt_client():
+    client.connect(settings.MQTT_SERVER, settings.MQTT_PORT, settings.MQTT_KEEPALIVE)
+    client.loop_start()
 
 client = mqtt.Client()
 client.on_connect = on_connect
 client.on_subscribe = on_subscribe
-client.on_message = on_message
-client.connect(
-        host=settings.MQTT_SERVER,
-        port=settings.MQTT_PORT,
-        keepalive=settings.MQTT_KEEPALIVE
-    )
+

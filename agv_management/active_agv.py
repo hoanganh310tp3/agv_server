@@ -59,4 +59,3 @@ def deactivate_AGV():
         query = agv_data.objects.all().filter(agv_identify__car_id = eachCar).last()
         if query and (timeNow - query.time_stamp).total_seconds() >= 180:
             agv_identify.objects.filter(agv_id = eachCar).update(is_active = False)
-

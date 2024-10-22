@@ -84,4 +84,3 @@ class Population:
 # Nếu có giá trị Inbound và Outbound, phương thức sẽ tính toán tuyến đường khả thi từ Inbound đến Outbound.
 # Nếu tuyến đường khả thi từ Inbound đến Outbound tồn tại, phương thức sẽ tính toán giá trị chi phí và tín hiệu điều khiển.
 # Nếu không tìm được đường đi hợp lệ, chi phí được đặt là 100000, tức là không khả thi.
-
