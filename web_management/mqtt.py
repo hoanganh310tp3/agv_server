@@ -43,5 +43,12 @@ def start_mqtt_client():
 
 client = mqtt.Client()
 client.on_connect = on_connect
+client.on_message = on_message
 client.on_subscribe = on_subscribe
+
+try:
+    client.connect(settings.MQTT_SERVER, settings.MQTT_PORT, settings.MQTT_KEEPALIVE)
+    client.loop_start()
+except ValueError as e:
+    print(f"Error connecting to MQTT broker: {e}")
 

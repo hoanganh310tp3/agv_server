@@ -14,6 +14,7 @@ class order_data(models.Model):
     start_point = models.PositiveBigIntegerField(default= 0)
     end_point = models.PositiveBigIntegerField(default= 0)
     user_name = models.ForeignKey(User, to_field='name', on_delete= models.CASCADE, null= True)
+    is_processed = models.BooleanField(default=False)
     
     def save(self, *args, **kwargs):
         self.load_weight = material.objects.get(material_name = self.load_name).material_weight

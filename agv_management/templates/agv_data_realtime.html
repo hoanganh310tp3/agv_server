@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Real-time AGV Data</title>
+    <script>
+        const socket = new WebSocket('ws://' + window.location.host + '/ws/agv_data/');
+
+        socket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            document.getElementById('agv-data').innerHTML = `
+                <p>Car ID: ${data.car_id}</p>
+                <p>State: ${data.agv_state}</p>
+                <p>Speed: ${data.agv_speed} m/s</p>
+                <p>Battery: ${data.agv_battery}%</p>
+                <p>Previous Waypoint: ${data.previous_waypoint}</p>
+                <p>Next Waypoint: ${data.next_waypoint}</p>
+                <p>Distance: ${data.distance} m</p>
+                <p>Total Distance: ${data.distance_sum} m</p>
+                <p>Timestamp: ${data.time_stamp}</p>
+            `;
+        };
+    </script>
+</head>
+<body>
+    <h1>Real-time AGV Data</h1>
+    <div id="agv-data"></div>
+</body>
+</html>

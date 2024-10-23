@@ -102,7 +102,7 @@ ASGI_APPLICATION = 'web_management.asgi.application'
 DATABASES = {
 'default': {
 'ENGINE': 'django.db.backends.postgresql_psycopg2',
-'NAME': 'agv_database1',
+'NAME': 'agv_database12',
 'USER': 'agv',
 'PASSWORD': '123456hadz',
 'HOST': 'localhost',

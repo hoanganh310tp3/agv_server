@@ -17,7 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework import routers
-from agv_management.views import AgvIdentifyViewSet
+from agv_management.views import AgvIdentifyViewSet, agv_data_realtime
 from requests_management.views import OrderView, ScheduleView
 from material_management.views import MaterialView
 
@@ -37,4 +37,5 @@ urlpatterns = [
     #API related rows
     path("api/", include('users_management.urls')),
     path('api/', include(router.urls)),
+    path('agv-data-realtime/', agv_data_realtime, name='agv_data_realtime'),
 ]

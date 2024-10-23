@@ -33,6 +33,7 @@ class agv_status(models.Model):
     def __str__(self):
         return "State #: {ID}".format(ID = self.state_id) + ":" + "state".format(state = self.state_name)
 
+#old code
 class AGVData():
     class Position():
         def __init__(self, pNode, nNode, distance):
@@ -40,13 +41,16 @@ class AGVData():
             self.nextNode = nNode
             self.distance = distance
 
-    messageFrameAGVData = [1, 1, 1, 2, 1, 2, 1, 2, 2, 2, 2, 2, 2, 1]
+    messageFrameAGVData = [1, 1, 1, 2, 1, 2, 1, 2, 2, 2, 2, 2, 1]
     payloadAGVData = []
     bufferAGVData = []
     carPosition = Position
 
     def __init__(self, payload):
-        self.payloadAGVData = payload
+        if isinstance(payload, str):
+            self.payloadAGVData = bytes.fromhex(payload.replace(' ', ''))
+        else:
+            self.payloadAGVData = payload
     
     def decodeBuffer(self):
         self.bufferAGVData = buffer.spliceBuffer(self.messageFrameAGVData, self.payloadAGVData)
@@ -57,13 +61,12 @@ class AGVData():
         self.carPosition.prevNode = int.from_bytes(self.bufferAGVData[7], byteorder= 'little')
         self.carPosition.nextNode = int.from_bytes(self.bufferAGVData[8], byteorder= 'little')
         self.carPosition.distance = int.from_bytes(self.bufferAGVData[9], byteorder= 'little')   
-        self.energySum = int.from_bytes(self.bufferAGVData[10], byteorder= 'little')
-        self.distanceSum = int.from_bytes(self.bufferAGVData[11], byteorder= 'little')
+        self.distanceSum = int.from_bytes(self.bufferAGVData[10], byteorder= 'little')
         self.checkSum = int.from_bytes(self.bufferAGVData[11], byteorder= 'little')
     
     def printOut(self):
         print("carId:", self.carID, "state:", self.carState, "battery capacity:", self.carBatteryCap/100, "speed:", self.carSpeed/100, "current position:",
-                    self.carPosition.prevNode, self.carPosition.nextNode, self.carPosition.distance/100, "total energy:", self.energySum, "total distance:", self.distanceSum/100)
+                    self.carPosition.prevNode, self.carPosition.nextNode, self.carPosition.distance/100, "total energy:", self.distanceSum/100)
 
     def check_sum(self):
         checkSumValue = self.carID + self.carState + self.carBatteryCap + self.carSpeed + self.carPosition.prevNode + self.carPosition.nextNode + self.carPosition.distance + self.energySum + self.distanceSum + self.checkSum
@@ -71,23 +74,80 @@ class AGVData():
             return True # packet valid
         else:
             return False # packet invalid
+        
+# class AGVData():
+#     messageFrameAGVData = [1, 1, 1, 2, 1, 2, 1, 2, 2, 2, 2, 2, 2, 1]
+#     payloadAGVData = []
+#     bufferAGVData = []
 
+#     def __init__(self, payload):
+#         if isinstance(payload, str):
+#             self.payloadAGVData = bytes.fromhex(payload.replace(' ', ''))
+#         else:
+#             self.payloadAGVData = payload
 
+#     def decodeBuffer(self):
+#         self.bufferAGVData = self.payloadAGVData
+#         self.start_byte = self.bufferAGVData[0]
+#         self.message_type = self.bufferAGVData[1]
+#         self.message_length = self.bufferAGVData[2]
+#         self.carID = int.from_bytes(self.bufferAGVData[3:5], byteorder='big')
+#         self.carState = self.bufferAGVData[5]
+#         self.carBatteryCap = int.from_bytes(self.bufferAGVData[6:8], byteorder='big')
+#         self.carSpeed = self.bufferAGVData[8]
+#         self.prevNode = int.from_bytes(self.bufferAGVData[9:11], byteorder='big')
+#         self.nextNode = int.from_bytes(self.bufferAGVData[11:13], byteorder='big')
+#         self.distance = int.from_bytes(self.bufferAGVData[13:15], byteorder='big')
+#         self.distanceSum = int.from_bytes(self.bufferAGVData[15:17], byteorder='big')
+#         self.checkSum = int.from_bytes(self.bufferAGVData[17:19], byteorder='big')
+#         self.end_byte = self.bufferAGVData[19]
+
+#     def __str__(self):
+#         return f"Car ID: {self.carID}, State: {self.carState}, Battery: {self.carBatteryCap/100:.2f}%, " \
+#                f"Speed: {self.carSpeed/100:.2f} m/s, Previous Node: {self.prevNode}, " \
+#                f"Next Node: {self.nextNode}, Distance: {self.distance}, " \
+#                f"Total Distance: {self.distanceSum} m"
+
+#     def check_sum(self):
+#         calculated_sum = sum(self.bufferAGVData[1:17]) & 0xFFFF
+#         return calculated_sum == self.checkSum
+#oldcode 
 class agv_data(models.Model):
     data_id = models.BigAutoField(primary_key=True) 
-    # car_id = models.ForeignKey(agv_identify, on_delete=models.CASCADE) #many-to-one relationship test
-    car_id = models.ForeignKey(agv_identify, on_delete= models.CASCADE)
+    car_id = models.IntegerField()
     agv_state = models.IntegerField()
     agv_speed = models.FloatField()
     agv_battery = models.FloatField()
     current_position = AGVData.Position
     previous_waypoint = models.IntegerField()
+    distance = models.FloatField(default=0.0)
     next_waypoint = models.IntegerField()
     time_stamp = models.DateTimeField(blank= True)
+    distance_sum = models.FloatField() # recently added
     
     def __str__(self):
         return "Data ID: {ID}".format(ID = self.data_id)
+
+# class Position(models.Model):
+#     prevNode = models.IntegerField(default=0)
+#     nextNode = models.IntegerField(default=0)
+#     distance = models.FloatField(default=0.0)
+
+# class agv_data(models.Model):
+#     data_id = models.BigAutoField(primary_key=True) 
+#     car_id = models.IntegerField()
+#     agv_state = models.IntegerField()
+#     agv_speed = models.FloatField()
+#     agv_battery = models.FloatField()
+#     current_position = models.OneToOneField(Position, on_delete=models.CASCADE, null=True, blank=True)
+#     previous_waypoint = models.IntegerField()
+#     next_waypoint = models.IntegerField()
+#     time_stamp = models.DateTimeField(blank=True)
+#     distance_sum = models.FloatField()
     
+#     def __str__(self):
+#         return f"Data ID: {self.data_id}"
+
 class agv_error(models.Model):
     error_id = models.IntegerField(default= 0, unique= True)
     timestamp = models.DateTimeField(default= timezone.now)
@@ -95,6 +155,7 @@ class agv_error(models.Model):
     error_msg = models.CharField(max_length=16, default='')
     previous_waypoint = models.IntegerField()
     next_waypoint = models.IntegerField()  
+    order_number = models.IntegerField() #recently added
 
 #buffer
 

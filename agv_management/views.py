@@ -15,9 +15,12 @@ class AgvIdentifyViewSet(viewsets.ModelViewSet):
 
 # For Agv_data websocket 
 class AgvDataViewSet(viewsets.ModelViewSet):
+    
     serializer_class = AgvDataserializer
     queryset = agv_data.objects.all()
-    permission_classes = [IsAuthenticated]
     
 def index(request):
     return render(request, "agv_management/index.html")
+
+def agv_data_realtime(request):
+    return render(request, 'agv_data_realtime.html')

@@ -5,6 +5,11 @@ khởi động dự án :
 - rồi chạy bằng cú pháp: uvicorn web_management.asgi:application --host 127.0.0.1 --port 8000 --lifespan off
 set DJANGO_SETTINGS_MODULE=web_management.settings
 
+đổi tên app :
+   UPDATE django_content_type SET app_label = 'new_app_name' WHERE app_label = 'old_app_name';
+   UPDATE django_migrations SET app = 'new_app_name' WHERE app = 'old_app_name';
+
+
 test api cho agv_identify :
 {
          "agv_id": 1,

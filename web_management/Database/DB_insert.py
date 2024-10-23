@@ -12,7 +12,6 @@ def insertAGVData(AGVData):
                               previous_waypoint = AGVData.carPosition.prevNode, 
                               next_waypoint = AGVData.carPosition.nextNode, 
                               distance = AGVData.carPosition.distance/100, 
-                              battery_consumption = AGVData.energySum, 
                               distance_sum = AGVData.distanceSum/100,
                               time_stamp = timezone.now())
     
@@ -34,14 +33,14 @@ def insertOrder(Order):
                                 load_weight = Order.LoadWeight,
                                 order_date = Order.Date,
                                 agv_id = Order.get_car_id(),
-                                battery_loss = Order.TotalEnergy, #maybe wrong
-                                total_trip = Order.get_total_distance(),
-                                start_time = Order.TimeStart,
-                                end_time = Order.TimeEnd,
-                                begin_waypoint = Order.Inbound,
-                                end_waypoint = Order.Outbound,
+                                est_energy = Order.TotalEnergy, #maybe wrong
+                                est_distance = Order.get_total_distance(),
+                                est_start_time = Order.TimeStart,
+                                est_end_time = Order.TimeEnd,
+                                start_point = Order.Inbound,
+                                end_point = Order.Outbound,
                                 control_signal = json.dumps(Order.list_control_signal()))
     
-    order_data.objects.filter(order_number = Order.Order).update(process_status = True)
+    order_data.objects.filter(order_number = Order.Order).update(is_processed = True)
     
     

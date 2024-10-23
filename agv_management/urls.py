@@ -1,7 +1,12 @@
-from django.urls import path, include
-from agv_management import views
+from django.urls import path
+from rest_framework.routers import DefaultRouter
+from . import views
 
+router = DefaultRouter()
+ 
+router.register('agv_data', views.AgvDataViewSet, basename="agv_data" )
 
 urlpatterns = [
-    path("", views.index),
+    path("", view=views.index),
 ]
+urlpatterns += router.urls
