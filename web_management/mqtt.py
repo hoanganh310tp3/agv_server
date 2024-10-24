@@ -51,4 +51,3 @@ try:
     client.loop_start()
 except ValueError as e:
     print(f"Error connecting to MQTT broker: {e}")
-
