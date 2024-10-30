@@ -20,16 +20,6 @@ def decodeThis(topic, payload):
     else:
         print(f"Unhandled topic name: {topicName}")
 
-# def decodeAGVData(payload):
-#     Data = AGVData(payload)
-#     Data.decodeBuffer()
-#     if Data.check_sum():
-#         DBInsert.insertAGVData(Data)
-#     else:
-#         pass
-
-
-#old code
 def deal_with_agv_data(payload):
     print(f"Processing AGV data with payload {payload}")
     try:
@@ -41,29 +31,17 @@ def deal_with_agv_data(payload):
     except Exception as e:
         print(f"Error processing AGV data: {e}")
 
-# def deal_with_agv_data(payload):
-#     print(f"Processing AGV data with payload {payload}")
-#     try:
-#         Data = AGVData(payload)
-#         Data.decodeBuffer()
-#         calculated_checksum = sum(Data.bufferAGVData[1:17]) & 0xFFFF
-#         print(f"Calculated checksum: {calculated_checksum}, Received checksum: {Data.checkSum}")
-#         print(f"Decoded AGV data: {Data}")
-#         if Data.check_sum():
-#             DB_insert.insertAGVData(Data)
-#             print("AGV data inserted into database")
-#         else:
-#             print("Checksum validation failed. Data not inserted.")
-#         print(f"Raw buffer data: {' '.join([f'{b:02X}' for b in Data.bufferAGVData])}")
-#     except Exception as e:
-#         print(f"Error processing AGV data: {e}")
-#         import traceback
-#         print(traceback.format_exc())
         
 def deal_with_agv_error(payload):
-    error = AGVError(payload)
-    error.decodeBuffer()
-    DB_insert.insertAGVError(error)
+    print(f"Processing AGV error with payload {payload}")
+    try:
+        Data = AGVError(payload)
+        Data.decodeBuffer()
+        print(f"Decoded AGV error: {vars(Data)}")
+        DB_insert.insertAGVError(Data)
+        print("AGV error inserted into database")
+    except Exception as e:
+        print(f"Error processing AGV error: {e}")
 
 def deal_with_agv_hi(carID):
     pass

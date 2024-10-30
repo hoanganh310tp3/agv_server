@@ -33,42 +33,7 @@ class agv_status(models.Model):
     def __str__(self):
         return "State #: {ID}".format(ID = self.state_id) + ":" + "state".format(state = self.state_name)
 
-#old code
-# class AGVData():
-#     class Position():
-#         def __init__(self, pNode, nNode, distance):
-#             self.prevNode = pNode
-#             self.nextNode = nNode
-#             self.distance = distance
 
-#     messageFrameAGVData = messageFrameAGVData = [1, 1, 1, 2, 1, 2, 1, 2, 2, 2, 2, 2, 2, 1]
-#     payloadAGVData = []
-#     bufferAGVData = []
-#     carPosition = Position
-
-#     def __init__(self, payload):
-#         self.payloadAGVData = payload
-    
-#     def decodeBuffer(self):
-#         self.carID = int.from_bytes(self.bufferAGVData[3], byteorder= 'little')
-#         self.carState = int.from_bytes(self.bufferAGVData[4], byteorder= 'little')
-#         self.carBatteryCap = int.from_bytes(self.bufferAGVData[5], byteorder= 'little')
-#         self.carSpeed = int.from_bytes(self.bufferAGVData[6], byteorder= 'little')
-#         self.carPosition.prevNode = int.from_bytes(self.bufferAGVData[7], byteorder= 'little')
-#         self.carPosition.nextNode = int.from_bytes(self.bufferAGVData[8], byteorder= 'little')
-#         self.carPosition.distance = int.from_bytes(self.bufferAGVData[9], byteorder= 'little')   
-#         self.energySum = int.from_bytes(self.bufferAGVData[10], byteorder= 'little')
-#         self.distanceSum = int.from_bytes(self.bufferAGVData[11], byteorder= 'little')
-#         self.checkSum = int.from_bytes(self.bufferAGVData[12], byteorder= 'little')
-    
-    
-
-#     def check_sum(self):
-#         checkSumValue = self.carID + self.carState + self.carBatteryCap + self.carSpeed + self.carPosition.prevNode + self.carPosition.nextNode + self.carPosition.distance + self.distanceSum + self.checkSum
-#         if (checkSumValue + self.check_sum == 65536):
-#             return True # packet valid
-#         else:
-#             return False # packet invalid
 
 class AGVData():
     class Position():
@@ -96,6 +61,7 @@ class AGVData():
         self.carPosition.distance = int(self.bufferAGVData[9], 16)   
         self.distanceSum = int(self.bufferAGVData[10], 16)
         self.checkSum = int(self.bufferAGVData[11], 16)
+        
     
     def printOut(self):
         print("carId:", self.carID, "state:", self.carState, "battery capacity:", self.carBatteryCap/100, "speed:", self.carSpeed/100, "current position:",
@@ -130,7 +96,7 @@ class agv_data(models.Model):
 class agv_error(models.Model):
     error_id = models.IntegerField(default= 0, unique= True)
     timestamp = models.DateTimeField(default= timezone.now)
-    car_id = models.ForeignKey(agv_identify, on_delete=models.CASCADE) #many-to-one relationship 
+    car_id = models.IntegerField()
     error_msg = models.CharField(max_length=16, default='')
     previous_waypoint = models.IntegerField()
     next_waypoint = models.IntegerField()  
@@ -140,7 +106,7 @@ class agv_error(models.Model):
 
 
 class AGVError():
-    messageFrameAGVError = [1, 1, 1, 2, 1, 1, 2, 2, 1]
+    messageFrameAGVError = [2, 2, 2, 4, 2, 2, 4, 4, 4, 2]
     payloadAGVError = []
     bufferAGVError = []
 
@@ -149,8 +115,10 @@ class AGVError():
     
     def decodeBuffer(self):
         self.bufferAGVError = buffer.spliceBuffer(self.messageFrameAGVError, self.payloadAGVError)
-        self.carID = int.from_bytes(self.bufferAGVError[3], byteorder= 'little')
-        self.errorCode = int.from_bytes(self.bufferAGVError[4], byteorder= 'little')
-        self.orderNum = int.from_bytes(self.bufferAGVError[5], byteorder= 'little')
-        self.prevNode = int.from_bytes(self.bufferAGVError[6], byteorder= 'little')
-        self.nextNode = int.from_bytes(self.bufferAGVError[7], byteorder= 'little')
+        self.carID = int(self.bufferAGVError[3], 16)
+        self.errorCode = int(self.bufferAGVError[4], 16)
+        self.orderNum = int(self.bufferAGVError[5], 16)
+        self.prevNode = int(self.bufferAGVError[6], 16)
+        self.nextNode = int(self.bufferAGVError[7], 16)
+        self.checkSum = int(self.bufferAGVError[8], 16)
+        

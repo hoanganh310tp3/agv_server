@@ -8,11 +8,11 @@ def insertAGVData(AGVData):
     agv_data.objects.create(  car_id = AGVData.carID, 
                               agv_state = AGVData.carState, 
                               agv_battery= AGVData.carBatteryCap/100, 
-                              agv_speed = AGVData.carSpeed, 
+                              agv_speed = AGVData.carSpeed/100, 
                               previous_waypoint = AGVData.carPosition.prevNode, 
                               next_waypoint = AGVData.carPosition.nextNode, 
-                              distance = AGVData.carPosition.distance, 
-                              distance_sum = AGVData.distanceSum,
+                              distance = AGVData.carPosition.distance/100, 
+                              distance_sum = AGVData.distanceSum/100,
                               time_stamp = timezone.now())
     
 def insertAGVError(AGVError):
