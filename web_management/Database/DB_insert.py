@@ -1,4 +1,4 @@
-from agv_management.models import agv_data, agv_error
+from agv_management.models import agv_data, agv_error, agv_identify
 from requests_management.models import schedule_data, order_data
 
 from django.utils import timezone
@@ -21,6 +21,28 @@ def insertAGVError(AGVError):
                                error_id = AGVError.errorCode,
                                previous_waypoint = AGVError.prevNode, 
                                next_waypoint = AGVError.nextNode)
+    
+def insertAGVHi(AGVHi, carID):
+    is_busy_bool = AGVHi.isBusy == 1
+    is_connected_bool = AGVHi.isConnected == 1
+    
+    guidance_type_map = {
+        1: 'line_following',
+        2: 'image_processing'
+    }
+    guidance_type_str = guidance_type_map.get(AGVHi.guidanceType, 'line_following')
+    
+    agv_identify.objects.update_or_create(
+        agv_id=carID,
+        defaults={
+            'max_speed': AGVHi.maxSpeed,
+            'battery_capacity': AGVHi.batteryCapacity,
+            'max_load': AGVHi.maxLoad/100,
+            'guidance_type': guidance_type_str,
+            'is_busy': is_busy_bool,
+            'is_connected': is_connected_bool
+        }
+    )
     
 def insertOrder(Order):
     query = schedule_data.objects.filter(order_number = Order.Order, order_date = Order.Date)

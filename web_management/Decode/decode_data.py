@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from agv_management.models import AGVData, AGVError
+from agv_management.models import AGVData, AGVError, AGVHi
 from web_management.Database import DB_insert
 from agv_management.active_agv import is_agv_active
 
@@ -7,7 +7,7 @@ from agv_management.active_agv import is_agv_active
 def decodeThis(topic, payload):
     print(f"Decoding message from topic {topic} with payload {payload}")
     topicName = topic.split("/")[0].lower()  # Convert to lowercase
-    carID = topic.split("/")[1]
+    carID = int(topic.split("/")[1])  # Lấy carID từ topic
     print(f"Topic name: {topicName}, Car ID: {carID}")
 
     if topicName == 'agv_data':
@@ -16,7 +16,7 @@ def decodeThis(topic, payload):
     elif topicName == 'agverror':
         deal_with_agv_error(payload)
     elif topicName == 'agvhi':
-        deal_with_agv_hi(carID)
+        deal_with_agv_hi(payload, carID)  # Truyền thêm carID
     else:
         print(f"Unhandled topic name: {topicName}")
 
@@ -43,5 +43,13 @@ def deal_with_agv_error(payload):
     except Exception as e:
         print(f"Error processing AGV error: {e}")
 
-def deal_with_agv_hi(carID):
-    pass
+def deal_with_agv_hi(payload, carID):
+    print(f"Processing AGV hi with payload {payload}")
+    try:
+        Data = AGVHi(payload)
+        Data.decodeBuffer()
+        print(f"Decoded AGV hi: {vars(Data)}")
+        DB_insert.insertAGVHi(Data, carID)  # Truyền thêm carID
+        print("AGV hi inserted into database")
+    except Exception as e:
+        print(f"Error processing AGV hi: {e}")

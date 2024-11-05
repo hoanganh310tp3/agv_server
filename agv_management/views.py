@@ -11,7 +11,7 @@ from .serializers import AgvIdentifySerializer, AgvDataserializer
 class AgvIdentifyViewSet(viewsets.ModelViewSet):
     serializer_class = AgvIdentifySerializer
     queryset = agv_identify.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = []
 
 # For Agv_data websocket 
 class AgvDataViewSet(viewsets.ModelViewSet):

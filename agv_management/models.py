@@ -7,6 +7,7 @@ from django.utils import timezone
 from web_management.Decode import buffer
 from django.utils.translation import gettext_lazy as _
 
+#identify handling
 class agv_identify(models.Model):
     
     GUIDANCE_TYPE =(
@@ -15,7 +16,7 @@ class agv_identify(models.Model):
     )
     
     
-    agv_id = models.IntegerField(primary_key=True, blank=False)  
+    agv_id = models.IntegerField(primary_key=True, blank=False)
     max_speed = models.IntegerField(default= 0)
     battery_capacity = models.IntegerField(default= 0)
     max_load = models.IntegerField(default=0)
@@ -26,6 +27,26 @@ class agv_identify(models.Model):
     def __str__(self):
         return "Vehicle ID: {ID}".format(ID= self.agv_id) + "." + "Operation: {state}".format(state = self.operation) + "Connection: {state}".format(state = self.connection)
 
+class AGVHi():
+    messageFrameAGVHi = [2, 2, 2, 4, 2, 4, 2, 2, 2, 2, 2]
+    
+    payloadAGVHi = []
+    bufferAGVHi = []
+    def __init__(self, payload):
+        self.payloadAGVHi = payload
+        
+    
+    def decodeBuffer(self):
+        self.bufferAGVHi = buffer.spliceBuffer(self.messageFrameAGVHi, self.payloadAGVHi)
+        self.maxSpeed = int(self.bufferAGVHi[3], 16)
+        self.batteryCapacity = int(self.bufferAGVHi[4], 16)
+        self.maxLoad = int(self.bufferAGVHi[5], 16)
+        self.guidanceType = int(self.bufferAGVHi[6], 16)
+        self.isBusy = int(self.bufferAGVHi[7], 16)
+        self.isConnected = int(self.bufferAGVHi[8], 16)
+            
+        
+
 class agv_status(models.Model):
     state_id = models.IntegerField(default= 0)
     state_name = models.CharField(max_length= 16, default= 'None')
@@ -34,7 +55,7 @@ class agv_status(models.Model):
         return "State #: {ID}".format(ID = self.state_id) + ":" + "state".format(state = self.state_name)
 
 
-
+#data handling
 class AGVData():
     class Position():
         def __init__(self, pNode, nNode, distance):
@@ -92,7 +113,7 @@ class agv_data(models.Model):
         return "Data ID: {ID}".format(ID = self.data_id)
 
 
-
+#error handling
 class agv_error(models.Model):
     error_id = models.IntegerField(default= 0, unique= True)
     timestamp = models.DateTimeField(default= timezone.now)
@@ -102,11 +123,8 @@ class agv_error(models.Model):
     next_waypoint = models.IntegerField()  
     order_number = models.IntegerField() #recently added
 
-#buffer
-
-
 class AGVError():
-    messageFrameAGVError = [2, 2, 2, 4, 2, 2, 4, 4, 4, 2]
+    messageFrameAGVError = [2, 2, 2, 4, 2, 2, 4, 4, 2]
     payloadAGVError = []
     bufferAGVError = []
 
@@ -120,5 +138,5 @@ class AGVError():
         self.orderNum = int(self.bufferAGVError[5], 16)
         self.prevNode = int(self.bufferAGVError[6], 16)
         self.nextNode = int(self.bufferAGVError[7], 16)
-        self.checkSum = int(self.bufferAGVError[8], 16)
+    
         

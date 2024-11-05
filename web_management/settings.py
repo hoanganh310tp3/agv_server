@@ -18,9 +18,7 @@ def get_current_ipv4():
 
 
 
-# CORS_ORIGIN_WHITELIST = [
-#     "http://localhost:3000",  
-# ]
+
 CORS_ALLOW_ALL_ORIGINS = True
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -190,5 +188,6 @@ REST_FRAMEWORK = {
 }
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # React frontend URL
+    # "http://localhost:3000",  # React frontend URL
+    "http://localhost:5173",  # Your Vite dev server
 ]
