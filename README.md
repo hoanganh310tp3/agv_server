@@ -36,6 +36,8 @@
 7A140400280419284B0014001905DC4B00012C7F
 7A14050032012580780019001E07D05DC001A37F
 
+7A09020001141F40020101017F
+
 ***cách xóa dữ liệu trong bảng agv_management_agv_data của database:
 - Mở pgAdmin 4 và chọn database
 - Mở query tool
@@ -47,5 +49,11 @@ TRUNCATE TABLE ten_bang RESTART IDENTITY;
 
 VACUUM ten_bang;
 
+*** cách giải phóng các cổng đang được kết nối:
+- Xem các cổng đang được kết nối: 
 
-7A09020001141F40020101017F
+netstat -ano | findstr :5173
+
+- Kết thúc tiến trình sử dụng cổng: 
+
+taskkill /PID <PID> /F

@@ -2,7 +2,7 @@ from . import abc
 from . import schedule
 
 # import sẽ bị comment out nếu ta dùng file csv để test
-     # from requests_management.models import order_data
+from requests_management.models import order_data
 # Đoạn mã này định nghĩa lớp Requirement để quản lý các yêu cầu vận chuyển hàng hóa bằng xe AGV. Nó cũng bao gồm một phương thức tĩnh để đọc dữ liệu từ bảng cơ sở dữ liệu (hoặc tệp CSV trong mã bị chú thích) và tạo danh sách các yêu cầu vận chuyển.
 class Requirement:
     # Định nghĩa lớp Requirement với các thuộc tính và phương thức khởi tạo.
@@ -42,47 +42,47 @@ class Requirement:
 #      listOfOrders.append(requirement): Thêm đối tượng Requirement đã được tạo vào danh sách.
 #      return listOfOrders: Trả về danh sách các yêu cầu.
 
-    # def ReadTimeTable():
-    #     orderQuerySet = order_data.objects.all().order_by('start_time')
+    def ReadTimeTable():
+        orderQuerySet = order_data.objects.all().order_by('start_time')
         
-    #     listOfOrders = list()
+        listOfOrders = list()
         
-    #     for eachOrder in orderQuerySet:
-    #         requirement = Requirement()
-    #         requirement.Order = int(eachOrder.order_number)
-    #         requirement.Date = str(eachOrder.order_date)
-    #         requirement.Name = str(eachOrder.load_name)
-    #         requirement.Number = int(eachOrder.load_amount)
-    #         requirement.LoadWeight = float(eachOrder.load_weight)
-    #         requirement.TimeStart = str(eachOrder.start_time)
-    #         requirement.Inbound = int(eachOrder.from_node)
-    #         requirement.Outbound = int(eachOrder.to_node)
-    #         listOfOrders.append(requirement)
+        for eachOrder in orderQuerySet:
+            requirement = Requirement()
+            requirement.Order = int(eachOrder.order_id)
+            requirement.Date = str(eachOrder.order_date)
+            requirement.Name = str(eachOrder.load_name)
+            requirement.Number = int(eachOrder.load_amount)
+            requirement.LoadWeight = float(eachOrder.load_weight)
+            requirement.TimeStart = str(eachOrder.start_time)
+            requirement.Inbound = int(eachOrder.start_point)
+            requirement.Outbound = int(eachOrder.end_point)
+            listOfOrders.append(requirement)
             
-    #     return listOfOrders
+        return listOfOrders
 
 #test bằng file csv
 # Mã bị chú thích này là phiên bản đọc dữ liệu từ tệp CSV thay vì từ cơ sở dữ liệu.
 # open("TimeTable.csv",'r'): Mở tệp CSV chứa thông tin đơn hàng.
 # for line in f:: Đọc từng dòng của tệp và chia tách các giá trị để gán vào đối tượng Requirement.
-    def ReadTimeTable():
-        f = open("TimeTable.csv",'r')
-        temp = f.readline()
-        ListOfRequirement = list()
-        for line in f:
-            temp = line.strip().split(',')
-            requirement = Requirement()
-            requirement.Order = int(temp[0])
-            requirement.Name = str(temp[1])
-            requirement.Number = int(temp[2])
-            requirement.LoadWeight = float(temp[3])
-            requirement.TimeStart = str(temp[4])
-            requirement.Inbound = int(temp[5])
-            requirement.Outbound = int(temp[6])
-            ListOfRequirement.append(requirement)
-        f.close()
+    # def ReadTimeTable():
+    #     f = open("TimeTable.csv",'r')
+    #     temp = f.readline()
+    #     ListOfRequirement = list()
+    #     for line in f:
+    #         temp = line.strip().split(',')
+    #         requirement = Requirement()
+    #         requirement.Order = int(temp[0])
+    #         requirement.Name = str(temp[1])
+    #         requirement.Number = int(temp[2])
+    #         requirement.LoadWeight = float(temp[3])
+    #         requirement.TimeStart = str(temp[4])
+    #         requirement.Inbound = int(temp[5])
+    #         requirement.Outbound = int(temp[6])
+    #         ListOfRequirement.append(requirement)
+    #     f.close()
 
-        return ListOfRequirement
+    #     return ListOfRequirement
     
 # Lớp Requirement được sử dụng để lưu trữ và quản lý thông tin về các đơn hàng.
 # Phương thức tĩnh ReadTimeTable đọc dữ liệu từ cơ sở dữ liệu (hoặc từ tệp CSV) và trả về danh sách các yêu cầu vận chuyển.

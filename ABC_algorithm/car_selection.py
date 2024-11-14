@@ -2,13 +2,17 @@
 from . import agv_car
 from . import abc
 from . import population
-from . import selected_car_trip
 from . import convert
 from . import requirement
 # Loại bỏ import từ agv_management nếu đang cần test một mình thuật toán
-# from agv_management.active_agv import list_active_AGV
+from agv_management.active_agv import list_active_AGV
 
 #Lựa chọn xe AGV dựa trên các yêu cầu và điều kiện.
+
+class SelectedCarTrip:
+    def __init__(self,Car = "", Cost = ""):
+        self.Car = Car
+        self.Cost = Cost
 
 class CarSelection:
     @staticmethod
@@ -18,14 +22,15 @@ class CarSelection:
         aAGV = list()
         agv_car.AGVCar.CarList = []
         #test algorithm by comment out models
-        # aAGV = list_active_AGV()
+        aAGV = list_active_AGV()
 
         # # Thêm dữ liệu mẫu cho aAGV nếu ta loại bỏ import từ agv_management
-        aAGV = [
-            (1, "Location1"),
-            (2, "Location2"),
-            (3, "Location3")
-        ]
+        # aAGV = [
+        #     (1, "Location1"),
+        #     (2, "Location2"),
+        #     (3, "Location3")
+        # ]
+       
         for eachCar in aAGV:
             NewCar = agv_car.AGVCar()
             NewCar.CarId = eachCar[0]
@@ -69,7 +74,7 @@ class CarSelection:
 # Nếu không, thuật toán ABC được gọi để tính toán chi phí di chuyển từ vị trí hiện tại của xe đến điểm Inbound.
 # Nếu chi phí của xe mới tìm thấy thấp hơn xe tốt nhất hiện tại, cập nhật BestCar với xe và chi phí mới.
         NewABC = abc.ABC()
-        BestCar = selected_car_trip.SelectedCarTrip("",population.Population())
+        BestCar = SelectedCarTrip("",population.Population())
         for EachCar in agv_car.AGVCar.CarList:
             if(ListOfCar[int(EachCar.CarId)] == 1):
                 TimeStart = convert.Convert.TimeToTimeStamp(TempList[EachCar.CarId])

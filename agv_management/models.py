@@ -88,12 +88,12 @@ class AGVData():
         print("carId:", self.carID, "state:", self.carState, "battery capacity:", self.carBatteryCap/100, "speed:", self.carSpeed/100, "current position:",
                     self.carPosition.prevNode, self.carPosition.nextNode, self.carPosition.distance/100, "total energy:", self.distanceSum/100)
 
-    def check_sum(self):
-        checkSumValue = self.carID + self.carState + self.carBatteryCap + self.carSpeed + self.carPosition.prevNode + self.carPosition.nextNode + self.carPosition.distance + self.energySum + self.distanceSum + self.checkSum
-        if (checkSumValue + self.check_sum == 65536):
-            return True # packet valid
-        else:
-            return False # packet invalid
+    # def check_sum(self):
+    #     checkSumValue = self.carID + self.carState + self.carBatteryCap + self.carSpeed + self.carPosition.prevNode + self.carPosition.nextNode + self.carPosition.distance + self.distanceSum + self.checkSum
+    #     if (checkSumValue + self.check_sum == 65536):
+    #         return True # packet valid
+    #     else:
+    #         return False # packet invalid
              
 
 class agv_data(models.Model):

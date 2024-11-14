@@ -20,6 +20,7 @@ from rest_framework import routers
 from agv_management.views import AgvIdentifyViewSet, agv_data_realtime
 from requests_management.views import OrderView, ScheduleView
 from material_management.views import MaterialView
+from users_management.views import LoginView
 
 
 router = routers.DefaultRouter()
@@ -38,4 +39,5 @@ urlpatterns = [
     path("api/", include('users_management.urls')),
     path('api/', include(router.urls)),
     path('agv-data-realtime/', agv_data_realtime, name='agv_data_realtime'),
+    path('api/login', LoginView.as_view(), name='login'),
 ]
