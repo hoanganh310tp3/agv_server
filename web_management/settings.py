@@ -14,6 +14,7 @@ from pathlib import Path
 import socket
 import datetime
 
+
 def get_current_ipv4():
     return socket.gethostbyname(socket.gethostname())
 

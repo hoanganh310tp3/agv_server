@@ -26,7 +26,7 @@ from users_management.views import LoginView
 router = routers.DefaultRouter()
 router.register(r'agv_identify', AgvIdentifyViewSet, 'Manage AGVs')
 router.register(r'orders', OrderView, 'Manage Orders')
-router.register(r'schedule', ScheduleView, 'Manage Schedules')
+router.register(r'schedules', ScheduleView, 'Manage Schedules')
 router.register(r'material', MaterialView, 'Manage Materials')
 
 urlpatterns = [

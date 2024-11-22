@@ -1,15 +1,15 @@
-import ABC_algorithm.convert 
+import BLL.convert
 #Gửi các tín hiệu điều khiển và dữ liệu liên quan đến AGV.
 class Send:
     def get_control_signal_bytes(Schedule):
         print(Schedule.ListOfControlSignal)
         ListOfByteControlSignal = bytearray()
-        ListOfByteControlSignal = ListOfByteControlSignal + ABC_algorithm.convert.Convert.returnIntToByte(122,1) + ABC_algorithm.convert.Convert.returnIntToByte(3,1)
+        ListOfByteControlSignal = ListOfByteControlSignal + BLL.convert.Convert.returnIntToByte(122,1) + BLL.convert.Convert.returnIntToByte(3,1)
         for EachControlSignal in Schedule.ListOfControlSignal:
-            ListOfByteControlSignal = ListOfByteControlSignal + ABC_algorithm.convert.Convert.returnIntToByte(EachControlSignal.Road.FirstNode,2) + ABC_algorithm.convert.Convert.returnFloatToByte(EachControlSignal.Velocity,1) + ABC_algorithm.convert.Convert.returnFloatToByte(EachControlSignal.Road.Distance,2) + ABC_algorithm.convert.Convert.returnIntToByte(EachControlSignal.Action,1)
+            ListOfByteControlSignal = ListOfByteControlSignal + BLL.convert.Convert.returnIntToByte(EachControlSignal.Road.FirstNode,2) + BLL.convert.Convert.returnFloatToByte(EachControlSignal.Velocity,1) + BLL.convert.Convert.returnFloatToByte(EachControlSignal.Road.Distance,2) + BLL.convert.Convert.returnIntToByte(EachControlSignal.Action,1)
         Length = len(Schedule.ListOfControlSignal)
-        ListOfByteControlSignal = ListOfByteControlSignal + ABC_algorithm.convert.Convert.returnIntToByte(Schedule.ListOfControlSignal[Length-1].Road.SecondNode,2) + ABC_algorithm.convert.Convert.returnFloatToByte(Schedule.ListOfControlSignal[Length-1].Velocity,1) + ABC_algorithm.convert.Convert.returnFloatToByte(Schedule.ListOfControlSignal[Length-1].Road.Distance,2) + ABC_algorithm.convert.Convert.returnIntToByte(Schedule.ListOfControlSignal[Length-1].Action,1)
-        ListOfByteControlSignal = ListOfByteControlSignal + ABC_algorithm.convert.Convert.returnIntToByte(127,1)
+        ListOfByteControlSignal = ListOfByteControlSignal + BLL.convert.Convert.returnIntToByte(Schedule.ListOfControlSignal[Length-1].Road.SecondNode,2) + BLL.convert.Convert.returnFloatToByte(Schedule.ListOfControlSignal[Length-1].Velocity,1) + BLL.convert.Convert.returnFloatToByte(Schedule.ListOfControlSignal[Length-1].Road.Distance,2) + BLL.convert.Convert.returnIntToByte(Schedule.ListOfControlSignal[Length-1].Action,1)
+        ListOfByteControlSignal = ListOfByteControlSignal + BLL.convert.Convert.returnIntToByte(127,1)
         return ListOfByteControlSignal
 
     def SendToUI(Schedule):

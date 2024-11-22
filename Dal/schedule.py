@@ -1,11 +1,11 @@
-import ABC_algorithm.schedule
+import DTO.schedule
 class Schedule:
     @staticmethod
     def SaveSchedule():
         f = open('Schedule.csv','w') 
         f.write("Order,Name,CarId,BatteryCapacity,TotalEnergy,WeightLoad,TimeStart,TimeEnd,Inbound,Outbound,TotalDistance")
         f.write("\n")
-        for EachSchedule in ABC_algorithm.schedule.Schedule.ListOfSchedule:
+        for EachSchedule in DTO.schedule.Schedule.ListOfSchedule:
             TotalDistance = float(0)
             f.write(str(EachSchedule.Order))
             f.write(",")

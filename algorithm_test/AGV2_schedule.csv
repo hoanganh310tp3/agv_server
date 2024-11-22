@@ -1,2 +1,0 @@
-Order,Name,CarId,BatteryCapacity,TotalEnergy,WeightLoad,TimeStart,TimeEnd,Inbound,Outbound,TotalDistance,ControlSignal
-1,Steel,1,99.96,160.611,20.0,00:00:05,00:01:12,3,14,6.1,30(0.35)(0.2),02(0.4)(0.1),23(1.6)(0.2),34(0.9)(0.2),45(0.9)(0.2),56(0.35)(0.2),68(1.05)(0.1),814(0.55)(0.2)

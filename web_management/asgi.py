@@ -14,6 +14,7 @@ from channels.auth import AuthMiddlewareStack
 from channels.routing import ProtocolTypeRouter, URLRouter
 from django.apps import apps
 
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'web_management.settings')
 django.setup()
 

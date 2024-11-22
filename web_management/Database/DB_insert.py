@@ -22,25 +22,26 @@ def insertAGVError(AGVError):
                                previous_waypoint = AGVError.prevNode, 
                                next_waypoint = AGVError.nextNode)
     
-def insertAGVHi(AGVHi, carID):
-    is_busy_bool = AGVHi.isBusy == 1
-    is_connected_bool = AGVHi.isConnected == 1
+def insertAGVIdentify(AGVIdentify, carID):
+    is_active_bool = AGVIdentify.isActive == 1
+    is_connected_bool = AGVIdentify.isConnected == 1
     
     guidance_type_map = {
         1: 'line_following',
         2: 'image_processing'
     }
-    guidance_type_str = guidance_type_map.get(AGVHi.guidanceType, 'line_following')
+    guidance_type_str = guidance_type_map.get(AGVIdentify.guidanceType, 'line_following')
     
     agv_identify.objects.update_or_create(
         agv_id=carID,
         defaults={
-            'max_speed': AGVHi.maxSpeed,
-            'battery_capacity': AGVHi.batteryCapacity,
-            'max_load': AGVHi.maxLoad/100,
+            'max_speed': AGVIdentify.maxSpeed/100,
+            'battery_capacity': AGVIdentify.batteryCapacity/100,
+            'max_load': AGVIdentify.maxLoad,
             'guidance_type': guidance_type_str,
-            'is_busy': is_busy_bool,
-            'is_connected': is_connected_bool
+            'is_active': is_active_bool,
+            'is_connected': is_connected_bool,
+            'parking_lot': AGVIdentify.parkingLot
         }
     )
     
@@ -61,8 +62,8 @@ def insertOrder(Order):
                                 est_end_time = Order.TimeEnd,
                                 start_point = Order.Inbound,
                                 end_point = Order.Outbound,
-                                control_signal = json.dumps(Order.list_control_signal()))
+                                instruction_set = json.dumps(Order.list_control_signal()))
     
-    order_data.objects.filter(order_number = Order.Order).update(is_processed = True)
+    order_data.objects.filter(order_number = Order.Order).update(is_scheduled = True)
     
     

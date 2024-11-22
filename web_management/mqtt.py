@@ -9,7 +9,7 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "web_management.settings")
 def subcribe():
     client.subscribe("AGV_Data/#")
     client.subscribe("AGVError/#")
-    client.subscribe("AGVHi/#")
+    client.subscribe("AGV_Identify/#")
 
 def publishMsg(pubTopic, pubPayload):
     client.publish(topic= pubTopic, payload= pubPayload)

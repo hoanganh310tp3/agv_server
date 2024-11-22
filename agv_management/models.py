@@ -16,19 +16,20 @@ class agv_identify(models.Model):
     )
     
     
-    agv_id = models.IntegerField(primary_key=True, blank=False)
+    agv_id = models.IntegerField(primary_key=True, blank= False)
     max_speed = models.IntegerField(default= 0)
     battery_capacity = models.IntegerField(default= 0)
     max_load = models.IntegerField(default=0)
-    guidance_type = models.CharField(max_length=255, blank=True, choices= GUIDANCE_TYPE)  
-    is_busy = models.BooleanField(default= True)  
+    guidance_type = models.CharField(max_length=255, blank=True, choices= GUIDANCE_TYPE) 
+    parking_lot = models.IntegerField(default= 0, blank= False)
+    is_active = models.BooleanField(default= True)  
     is_connected = models.BooleanField(default= True)
 
     def __str__(self):
-        return "Vehicle ID: {ID}".format(ID= self.agv_id) + "." + "Operation: {state}".format(state = self.operation) + "Connection: {state}".format(state = self.connection)
+        return "Vehicle ID: {ID}".format(ID= self.agv_id) + "." + "is_active: {state}".format(state = self.is_active) + "is_connected: {state}".format(state = self.is_connected)
 
 class AGVHi():
-    messageFrameAGVHi = [2, 2, 2, 4, 2, 4, 2, 2, 2, 2, 2]
+    messageFrameAGVHi = [2, 2, 2, 4, 2, 4, 2, 2, 2, 2, 2, 2]
     
     payloadAGVHi = []
     bufferAGVHi = []
@@ -38,12 +39,14 @@ class AGVHi():
     
     def decodeBuffer(self):
         self.bufferAGVHi = buffer.spliceBuffer(self.messageFrameAGVHi, self.payloadAGVHi)
-        self.maxSpeed = int(self.bufferAGVHi[3], 16)
-        self.batteryCapacity = int(self.bufferAGVHi[4], 16)
-        self.maxLoad = int(self.bufferAGVHi[5], 16)
-        self.guidanceType = int(self.bufferAGVHi[6], 16)
-        self.isBusy = int(self.bufferAGVHi[7], 16)
-        self.isConnected = int(self.bufferAGVHi[8], 16)
+        self.agv_id = int(self.bufferAGVHi[3], 16)
+        self.maxSpeed = int(self.bufferAGVHi[4], 16)
+        self.batteryCapacity = int(self.bufferAGVHi[5], 16)
+        self.maxLoad = int(self.bufferAGVHi[6], 16)
+        self.parkingLot = int(self.bufferAGVHi[7], 16)
+        self.guidanceType = int(self.bufferAGVHi[8], 16)
+        self.isActive = int(self.bufferAGVHi[9], 16)
+        self.isConnected = int(self.bufferAGVHi[10], 16)
             
         
 

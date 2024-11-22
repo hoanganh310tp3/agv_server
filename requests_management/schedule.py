@@ -1,35 +1,48 @@
+import BLL.schedule
+import DTO.schedule
+import BLL.convert
+import Dal.schedule
+import DTO.requirement
 
-import ABC_algorithm.convert
-import ABC_algorithm.schedule
-import ABC_algorithm.requirement
 from web_management.mqtt import publishMsg
 from web_management.Database.DB_insert import insertOrder
+
 from agv_management.active_agv import list_available_AGV
-from .models import order_data
-from .models import schedule_data
+from requests_management.models import order_data
+
 import json
 import datetime
 import time
 import sched
 from threading import Thread
 
+from .models import schedule_data
+
+import logging
+logger = logging.getLogger(__name__)
 
 def create_schedule():
-    ABC_algorithm.schedule.Schedule.ListOfSchedule = list()
-    ABC_algorithm.schedule.Schedule.returnListOfSchedule()
-    ABC_algorithm.schedule.Schedule.SaveSchedule()
-    for EachScheduleIndex, EachSchedule in enumerate(ABC_algorithm.schedule.Schedule.ListOfSchedule):# may be wrong because we mix 2 schedule.py 
-        insertOrder(EachSchedule)
+    try:
+        logger.info("Starting schedule creation")
+        DTO.schedule.Schedule.ListOfSchedule = list()
+        BLL.schedule.Schedule.returnListOfSchedule()
+        Dal.schedule.Schedule.SaveSchedule()
+        for EachScheduleIndex, EachSchedule in enumerate(DTO.schedule.Schedule.ListOfSchedule):
+            insertOrder(EachSchedule)
+        logger.info("Schedule creation completed successfully")
+    except Exception as e:
+        logger.error(f"Error creating schedule: {e}")
+        raise
 
 def get_control_signal_bytes(ListOfControlSignal):
     frameLength = 0
     ListOfByteControlSignal = bytearray()
     tempByteArray = bytearray()
-    ListOfByteControlSignal = ListOfByteControlSignal + ABC_algorithm.convert.Convert.returnIntToByte(122,1)
+    ListOfByteControlSignal = ListOfByteControlSignal + BLL.convert.Convert.returnIntToByte(122,1)
     for EachControlSignal in range(1, len(ListOfControlSignal)):
         frameLength += 6
-        tempByteArray = tempByteArray + ABC_algorithm.convert.Convert.returnIntToByte(ListOfControlSignal[EachControlSignal][0],2) + ABC_algorithm.convert.Convert.returnFloatToByte(ListOfControlSignal[EachControlSignal][2],1) + ABC_algorithm.convert.Convert.returnFloatToByte(ListOfControlSignal[EachControlSignal][3],2) + ABC_algorithm.convert.Convert.returnIntToByte(ListOfControlSignal[EachControlSignal][4],1)
-    ListOfByteControlSignal = ListOfByteControlSignal + ABC_algorithm.convert.Convert.returnIntToByte(frameLength+4,1) + ABC_algorithm.convert.Convert.returnIntToByte(3,1) + tempByteArray + ABC_algorithm.convert.Convert.returnIntToByte(127,1)
+        tempByteArray = tempByteArray + BLL.convert.Convert.returnIntToByte(ListOfControlSignal[EachControlSignal][0],2) + BLL.convert.Convert.returnFloatToByte(ListOfControlSignal[EachControlSignal][2],1) + BLL.convert.Convert.returnFloatToByte(ListOfControlSignal[EachControlSignal][3],2) + BLL.convert.Convert.returnIntToByte(ListOfControlSignal[EachControlSignal][4],1)
+    ListOfByteControlSignal = ListOfByteControlSignal + BLL.convert.Convert.returnIntToByte(frameLength+4,1) + BLL.convert.Convert.returnIntToByte(3,1) + tempByteArray + BLL.convert.Convert.returnIntToByte(127,1)
     return ListOfByteControlSignal
 
 def get_sched_for_car():
@@ -38,16 +51,21 @@ def get_sched_for_car():
 
     listOfSchedule = list()
 
-    query = schedule_data.objects.filter(order_date = date).values_list('order_date', 'start_time', 'control_signal').order_by('order_date')
+    query = schedule_data.objects.filter(
+        order_date=date
+    ).values_list(
+        'order_date', 
+        'est_start_time', 
+        'instruction_set'
+    ).order_by('order_date')
+    
     if query:
         listOfSchedule = list(query)
-    else:
-        pass
-
+    
     return listOfSchedule
 
 def schedule_agv():
-
+    
     create_schedule()
     latestSchedule = get_sched_for_car()
 
@@ -55,7 +73,7 @@ def schedule_agv():
 
     for eachSchedule in latestSchedule:
         normal = json.loads(eachSchedule[2])
-        topic = "AGVRoute/{Id}".format(Id = normal[0]) # topic may be from mqtt topic
+        topic = "AGVRoute/{Id}".format(Id = normal[0])
         payload = get_control_signal_bytes(normal)
         timeAt = "{date} {time}".format(date = str(eachSchedule[0]), time = eachSchedule[1])
         scheduler.enterabs(time.mktime(time.strptime(timeAt, "%Y-%m-%d %H:%M:%S")), 0, publishMsg, (topic, payload))
@@ -66,6 +84,8 @@ def schedule_agv():
 
 def threaded_schedule(scheduler):
     scheduler.run()
+
+
 
 def return_to_lot():
     # get current location of agv
@@ -78,7 +98,7 @@ def resched_agv(orderNum):
     orderQuerySet = order_data.objects.filter(order_date = date, order_number = orderNum).last()
 
     order = list()
-    Requirement = ABC_algorithm.requirement.Requirement()
+    Requirement = DTO.requirement.Requirement()
     Requirement.Order = int(orderQuerySet.order_number)
     Requirement.Name = str(orderQuerySet.load_name)
     Requirement.Number = int(orderQuerySet.load_amount)
@@ -88,4 +108,4 @@ def resched_agv(orderNum):
     Requirement.Outbound = int(orderQuerySet.to_node)
     order.append(Requirement)
 
-    ABC_algorithm.schedule.Schedule.reschedule_agv(order)
+    BLL.schedule.Schedule.reschedule_agv(order)

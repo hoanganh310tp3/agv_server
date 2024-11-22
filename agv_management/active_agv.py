@@ -6,7 +6,7 @@ from agv_management.models import agv_data, agv_identify
 
 # Kiểm tra xem một AGV có đang hoạt động hay không
 def is_agv_active(carID):
-    AGVisActive = agv_identify.objects.filter(agv_id = carID, is_busy = True, is_connected = True).exists()
+    AGVisActive = agv_identify.objects.filter(agv_id = carID, is_active = True, is_connected = True).exists()
     return AGVisActive
 
 # Trả về danh sách các AGV đang hoạt động
@@ -14,9 +14,9 @@ def is_agv_active(carID):
 # Sắp xếp theo ID của AGV
 def list_active_AGV():
     listOfActiveAGV = []
-    AGVisActive = agv_identify.objects.all().filter(is_busy = True, is_connected = False).order_by('agv_id') # cần sửa lại 
+    AGVisActive = agv_identify.objects.all().filter(is_active = True, is_connected = True).order_by('agv_id') 
     for eachQuery in AGVisActive:
-        listOfActiveAGV.append([eachQuery.agv_id])
+        listOfActiveAGV.append([eachQuery.agv_id, eachQuery.parking_lot])
     return listOfActiveAGV
 
 # Nếu AGV không gửi dữ liệu trong 300 giây (5 phút), đánh dấu là mất kết nối
