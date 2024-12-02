@@ -22,7 +22,7 @@
 .env.development
 .env.test
 .env.production
-
+.hoanganh.local
 # Log files
 *.log
 npm-debug.log*
