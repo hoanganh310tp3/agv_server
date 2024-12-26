@@ -1,12 +1,13 @@
-
-from rest_framework import viewsets, generics, status
+from rest_framework import viewsets,status
 from django.http import HttpResponse
 from .schedule import schedule_agv
-from .serializers import OrderSerializer, ScheduleSerializer, CreateListModelMixin
+from .serializers import OrderSerializer, ScheduleSerializer
 from .models import order_data, schedule_data
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+import logging
 
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 
@@ -34,10 +35,6 @@ class ScheduleView(viewsets.ModelViewSet):
     serializer_class = ScheduleSerializer
     queryset = schedule_data.objects.all()
 
-class SendTaskView(CreateListModelMixin, generics.CreateAPIView):
-    permission_classes = [AllowAny]
-    serializer_class = OrderSerializer
-
 def request_schedule(request):
     response = HttpResponse()
     if request.method == 'GET':
@@ -46,3 +43,4 @@ def request_schedule(request):
     else:
         pass
     return response
+

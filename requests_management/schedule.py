@@ -51,9 +51,7 @@ def get_sched_for_car():
 
     listOfSchedule = list()
 
-    query = schedule_data.objects.filter(
-        order_date=date
-    ).values_list(
+    query = schedule_data.objects.filter(order_date=date).values_list(
         'order_date', 
         'est_start_time', 
         'instruction_set'
@@ -61,6 +59,8 @@ def get_sched_for_car():
     
     if query:
         listOfSchedule = list(query)
+    else:
+        pass
     
     return listOfSchedule
 
@@ -82,10 +82,12 @@ def schedule_agv():
     scheduleThread = Thread(target = threaded_schedule, args = (scheduler, ))
     scheduleThread.start()
 
+
 def threaded_schedule(scheduler):
     scheduler.run()
 
 
+# Make agv return to parking station but not done
 
 def return_to_lot():
     # get current location of agv
