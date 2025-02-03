@@ -1,4 +1,4 @@
-import DTO.population
+
 import DTO.agv_car
 
 class SelectedCarTrip:

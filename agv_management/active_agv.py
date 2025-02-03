@@ -6,7 +6,7 @@ from agv_management.models import agv_data, agv_identify
 
 # Kiểm tra xem một AGV có đang hoạt động hay không
 def is_agv_active(carID):
-    AGVisActive = agv_identify.objects.filter(agv_id = carID, is_active = True, is_connected = True).exists()
+    AGVisActive = agv_identify.objects.filter(agv_id = carID, is_active = True, is_connected = False).exists()
     return AGVisActive
 
 # Trả về danh sách các AGV đang hoạt động
@@ -14,7 +14,7 @@ def is_agv_active(carID):
 # Sắp xếp theo ID của AGV
 def list_active_AGV():
     listOfActiveAGV = []
-    AGVisActive = agv_identify.objects.all().filter(is_active = True, is_connected = True).order_by('agv_id') 
+    AGVisActive = agv_identify.objects.all().filter(is_active = True, is_connected = False).order_by('agv_id') 
     for eachQuery in AGVisActive:
         listOfActiveAGV.append([eachQuery.agv_id, eachQuery.parking_lot])
     return listOfActiveAGV
@@ -70,3 +70,29 @@ def deactivate_AGV():
         query = agv_data.objects.all().filter(agv_identify__car_id = eachCar).last()
         if query and (timeNow - query.time_stamp).total_seconds() >= 180:
             agv_identify.objects.filter(agv_id = eachCar).update(is_busy = False)
+
+# Add validation to ensure scheduled time matches requested time
+def validate_schedule_time(requested_time, scheduled_time, tolerance_minutes=5):
+    """
+    Validate that scheduled time matches requested time within tolerance
+    """
+    time_diff = abs((scheduled_time - requested_time).total_seconds() / 60)
+    return time_diff <= tolerance_minutes
+
+# Modify scheduling logic to respect requested times
+def generate_schedule(orders):
+    schedule = []
+    for order in sorted(orders, key=lambda x: x.start_time):
+        # Find available time slot closest to requested start_time
+        available_slot = find_nearest_available_slot(order.start_time)
+        
+        if validate_schedule_time(order.start_time, available_slot):
+            schedule.append({
+                'order': order,
+                'scheduled_time': available_slot
+            })
+        else:
+            # Handle scheduling conflict
+            raise ScheduleConflictError(f"Cannot schedule order {order.id} at requested time")
+            
+    return schedule

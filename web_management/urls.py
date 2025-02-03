@@ -29,10 +29,11 @@ router.register(r'orders', OrderView, 'Manage Orders')
 router.register(r'schedules', ScheduleView, 'Manage Schedules')
 router.register(r'material', MaterialView, 'Manage Materials')
 
+
 urlpatterns = [
     #Non-API related rows
     path('admin/', admin.site.urls),
-    path('requests_management/',include('requests_management.urls')),
+    path('api/requests_management/', include('requests_management.urls')),
     path('agv_management/', include('agv_management.urls')),
     
     #API related rows
