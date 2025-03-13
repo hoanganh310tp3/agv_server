@@ -22,6 +22,7 @@ class Schedule:
             Schedule.Outbound = Requirement.Outbound
             Schedule.TimeStart = Requirement.TimeStart
             Schedule.LoadWeight = Requirement.LoadWeight
+            Schedule.LoadAmount = Requirement.LoadAmount
             
             Schedule.ListOfControlSignal = SelectedCarTrip.Cost.ListOfControlSignal + SelectedTransportingTrip.ListOfControlSignal
             Schedule.ControlSignal = Schedule.list_control_signal()

@@ -9,6 +9,7 @@ class Requirement:
         self.Inbound = Inbound
         self.Outbound = Outbound
         self.Number = 0
+
     
     def __str__(self):
         return f"{self.Order}, {self.Date}, {self.Name}, {self.CalledCar}, {self.Inbound}, {self.Outbound}"

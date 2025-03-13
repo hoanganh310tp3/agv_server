@@ -32,7 +32,7 @@ SECRET_KEY = 'django-insecure-pi2&yq^)79(u3k2_5&ips_!vj^zda780v(v+xg#4scrs0flrct
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 
@@ -97,14 +97,14 @@ ASGI_APPLICATION = 'web_management.asgi.application'
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
 DATABASES = {
-'default': {
-'ENGINE': 'django.db.backends.postgresql_psycopg2',
-'NAME': 'agv_database12',
-'USER': 'agv',
-'PASSWORD': '123456hadz',
-'HOST': 'localhost',
-'PORT': '5432',
-},
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'agv_database12',
+        'USER': 'agv',
+        'PASSWORD': '123456hadz',
+        'HOST': 'db',
+        'PORT': '5432',
+    },
 }
 
 # real-time data
@@ -114,7 +114,7 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            'hosts': [('127.0.0.1', 6379)], 
+            'hosts': [('redis', 6379)],
         },
     },
 }
@@ -166,7 +166,9 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-MQTT_SERVER = get_current_ipv4()
+# MQTT_SERVER = get_current_ipv4()
+# MQTT Configuration
+MQTT_SERVER = 'mosquitto'  # Tên service trong docker-compose
 MQTT_PORT = 1883
 MQTT_KEEPALIVE = 60
 

@@ -54,6 +54,7 @@ def insertOrder(Order):
     schedule_data.objects.create(order_number = Order.Order,
                                 load_name = Order.Name,
                                 load_weight = Order.LoadWeight,
+                                load_amount = Order.LoadAmount,
                                 order_date = Order.Date,
                                 agv_id = Order.get_car_id(),
                                 est_energy = Order.TotalEnergy, #maybe wrong

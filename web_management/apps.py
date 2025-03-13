@@ -28,8 +28,12 @@ class WebManagementConfig(AppConfig):
     # scheduler_started = False
 
     def ready(self):
-        import web_management.mqtt
-        web_management.mqtt.start_mqtt_client()
+        try:
+            import web_management.mqtt
+            web_management.mqtt.start_mqtt_client()
+        except ConnectionRefusedError:
+            print("Warning: Could not connect to MQTT broker. Some features may be unavailable.")
+        
         
         # # Chỉ chạy scheduler một lần
         # if not self.scheduler_started:

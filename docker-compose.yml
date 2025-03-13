@@ -1,0 +1,81 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    command: >
+      bash -c "
+        echo 'Waiting for PostgreSQL...' &&
+        while ! nc -z db 5432; do
+          sleep 1
+        done &&
+        echo 'PostgreSQL started' &&
+        python manage.py migrate &&
+        daphne -b 0.0.0.0 -p 8000 web_management.asgi:application
+      "
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    environment:
+      - DJANGO_SETTINGS_MODULE=web_management.settings
+      - POSTGRES_DB=agv_database12
+      - POSTGRES_USER=agv
+      - POSTGRES_PASSWORD=123456hadz
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - MQTT_SERVER=mosquitto
+      - MQTT_PORT=1883
+    networks:
+      - app_network
+    depends_on:
+      - db
+      - redis
+      - mosquitto
+
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=agv_database12
+      - POSTGRES_USER=agv
+      - POSTGRES_PASSWORD=123456hadz
+    ports:
+      - "5432:5432"
+    networks:
+      - app_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U agv -d agv_database12"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:6
+    volumes:
+      - redis_data:/data
+    networks:
+      - app_network
+
+  mosquitto:
+    image: eclipse-mosquitto:latest
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./config/mosquitto:/mosquitto/config
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    networks:
+      - app_network
+
+networks:
+  app_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  mosquitto_data:
+  mosquitto_log:

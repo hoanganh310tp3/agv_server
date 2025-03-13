@@ -65,23 +65,32 @@ def get_sched_for_car():
     return listOfSchedule
 
 def schedule_agv():
-    
-    create_schedule()
-    latestSchedule = get_sched_for_car()
+    try:
+        create_schedule()
+        latestSchedule = get_sched_for_car()
+        
+        logger.info(f"Retrieved schedules: {latestSchedule}")
+        
+        scheduler = sched.scheduler(time.time, time.sleep)
 
-    scheduler = sched.scheduler(time.time, time.sleep)
+        for eachSchedule in latestSchedule:
+            normal = json.loads(eachSchedule[2])
+            topic = "AGVRoute/{Id}".format(Id = normal[0])
+            payload = get_control_signal_bytes(normal)
+            timeAt = "{date} {time}".format(date = str(eachSchedule[0]), time = eachSchedule[1])
+            scheduled_time = time.mktime(time.strptime(timeAt, "%Y-%m-%d %H:%M:%S"))
+            
+            logger.info(f"Scheduling message - Topic: {topic}, Time: {timeAt}")
+            scheduler.enterabs(scheduled_time, 0, publishMsg, (topic, payload))
 
-    for eachSchedule in latestSchedule:
-        normal = json.loads(eachSchedule[2])
-        topic = "AGVRoute/{Id}".format(Id = normal[0])
-        payload = get_control_signal_bytes(normal)
-        timeAt = "{date} {time}".format(date = str(eachSchedule[0]), time = eachSchedule[1])
-        scheduler.enterabs(time.mktime(time.strptime(timeAt, "%Y-%m-%d %H:%M:%S")), 0, publishMsg, (topic, payload))
-
-    print(scheduler.queue)
-    scheduleThread = Thread(target = threaded_schedule, args = (scheduler, ))
-    scheduleThread.start()
-
+        logger.info(f"Scheduler queue: {scheduler.queue}")
+        scheduleThread = Thread(target = threaded_schedule, args = (scheduler, ))
+        scheduleThread.daemon = True  # Make thread daemon so it exits when main thread exits
+        scheduleThread.start()
+        
+    except Exception as e:
+        logger.error(f"Error in schedule_agv: {e}")
+        raise
 
 def threaded_schedule(scheduler):
     scheduler.run()

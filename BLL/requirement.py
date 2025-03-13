@@ -23,7 +23,7 @@ class Requirement:
                     requirement.Order = int(eachOrder.order_number)
                     requirement.Date = str(eachOrder.order_date)
                     requirement.Name = str(eachOrder.load_name)
-                    requirement.Number = int(eachOrder.load_amount)
+                    requirement.LoadAmount = int(eachOrder.load_amount)
                     requirement.LoadWeight = float(eachOrder.load_weight)
                     requirement.TimeStart = str(eachOrder.start_time)
                     requirement.Inbound = int(eachOrder.start_point)

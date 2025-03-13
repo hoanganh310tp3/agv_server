@@ -6,6 +6,7 @@ from django.db import models
 from django.utils import timezone
 from web_management.Decode import buffer
 from django.utils.translation import gettext_lazy as _
+import struct
 
 #identify handling
 class agv_identify(models.Model):
@@ -61,43 +62,55 @@ class agv_status(models.Model):
 #data handling
 class AGVData():
     class Position():
-        def __init__(self, pNode, nNode, distance):
+        def __init__(self, pNode=0, nNode=0, distance=0):
             self.prevNode = pNode
             self.nextNode = nNode
             self.distance = distance
 
-    messageFrameAGVData = [2, 2, 2, 4, 2, 4, 2, 4, 4, 4, 4, 4, 2]
-    payloadAGVData = []
-    bufferAGVData = []
-    carPosition = Position
-    
     def __init__(self, payload):
         self.payloadAGVData = payload
-    
-    def decodeBuffer(self):
-        self.bufferAGVData = buffer.spliceBuffer(self.messageFrameAGVData, self.payloadAGVData)
-        self.carID = int(self.bufferAGVData[3], 16)
-        self.carState = int(self.bufferAGVData[4], 16)
-        self.carBatteryCap = int(self.bufferAGVData[5], 16)
-        self.carSpeed = int(self.bufferAGVData[6], 16)
-        self.carPosition.prevNode = int(self.bufferAGVData[7], 16)
-        self.carPosition.nextNode = int(self.bufferAGVData[8], 16)
-        self.carPosition.distance = int(self.bufferAGVData[9], 16)   
-        self.distanceSum = int(self.bufferAGVData[10], 16)
-        self.checkSum = int(self.bufferAGVData[11], 16)
+        self.carPosition = self.Position()
         
-    
+    def decodeBuffer(self):
+        try:
+            # Convert bytes to list of integers for easier processing
+            data = list(self.payloadAGVData)
+            
+            # Verify frame start byte (0x7A = 122 = 'z')
+            if data[0] != 0x7A:
+                raise ValueError(f"Invalid frame start byte: {hex(data[0])}")
+            
+            # Get frame length and message type
+            frame_length = data[1]  # 0x0E = 14 bytes
+            message_type = data[2]  # 0x02
+            
+            if message_type != 0x02:
+                raise ValueError(f"Invalid message type: {hex(message_type)}")
+            
+            # Extract data fields
+            self.carID = data[3]
+            self.carState = data[4]
+            self.carSpeed = data[5]
+            self.carBatteryCap = data[6]
+            self.carPosition.prevNode = data[7]
+            self.carPosition.nextNode = data[8]
+            self.carPosition.distance = (data[9] << 8) + data[10]  # Combine 2 bytes for distance
+            self.distanceSum = (data[11] << 8) + data[12]  # Combine 2 bytes for distance_sum
+            
+            # Verify frame end byte (0x7F = 127)
+            if data[-1] != 0x7F:
+                raise ValueError(f"Invalid frame end byte: {hex(data[-1])}")
+                
+        except Exception as e:
+            raise ValueError(f"Failed to decode payload: {str(e)}")
+            
     def printOut(self):
-        print("carId:", self.carID, "state:", self.carState, "battery capacity:", self.carBatteryCap/100, "speed:", self.carSpeed/100, "current position:",
-                    self.carPosition.prevNode, self.carPosition.nextNode, self.carPosition.distance/100, "total energy:", self.distanceSum/100)
-
-    # def check_sum(self):
-    #     checkSumValue = self.carID + self.carState + self.carBatteryCap + self.carSpeed + self.carPosition.prevNode + self.carPosition.nextNode + self.carPosition.distance + self.distanceSum + self.checkSum
-    #     if (checkSumValue + self.check_sum == 65536):
-    #         return True # packet valid
-    #     else:
-    #         return False # packet invalid
-             
+        print(f"Car ID: {self.carID}")
+        print(f"State: {self.carState}")
+        print(f"Speed: {self.carSpeed}")
+        print(f"Battery: {self.carBatteryCap}%")
+        print(f"Position: {self.carPosition.prevNode} -> {self.carPosition.nextNode} ({self.carPosition.distance} units)")
+        print(f"Total Distance: {self.distanceSum}")
 
 class agv_data(models.Model):
     data_id = models.BigAutoField(primary_key=True) 
@@ -110,7 +123,7 @@ class agv_data(models.Model):
     distance = models.FloatField(default=0.0)
     next_waypoint = models.IntegerField()
     time_stamp = models.DateTimeField(blank= True)
-    distance_sum = models.FloatField() # recently added
+    distance_sum = models.FloatField() 
     
     def __str__(self):
         return "Data ID: {ID}".format(ID = self.data_id)
