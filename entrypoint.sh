@@ -1,5 +1,5 @@
 #!/bin/bash
-
+cat entrypoint.sh
 # Wait for database to be ready
 while ! nc -z db 5432; do
   echo "Waiting for postgres..."
@@ -15,4 +15,4 @@ python manage.py migrate
 # python manage.py createsuperuser --noinput
 
 # Start server
-exec "$@" 
+uvicorn web_management.asgi:application --host 127.0.0.1 --port 8000 --lifespan off

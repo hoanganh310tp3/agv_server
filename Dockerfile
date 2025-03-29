@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y \
     libffi-dev \
     dnsutils \
     iputils-ping \
+    dos2unix \
     && rm -rf /var/lib/apt/lists/*
 
 # Upgrade pip
@@ -29,13 +30,13 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project
 COPY . .
 
-# Copy entrypoint script
-COPY entrypoint.sh .
-RUN chmod +x entrypoint.sh
+# Fix entrypoint.sh file permissions and format
+RUN dos2unix /app/entrypoint.sh \
+    && chmod +x /app/entrypoint.sh
 
-# Copy check_services.sh
-COPY check_services.sh /app/
+# Fix check_services.sh file permissions
 RUN chmod +x /app/check_services.sh
 
-# Run entrypoint script
-ENTRYPOINT ["/app/entrypoint.sh"] 
+# Set the default command
+CMD ["/bin/bash", "/app/entrypoint.sh"]
+
