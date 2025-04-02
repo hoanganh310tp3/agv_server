@@ -131,3 +131,139 @@ class Road:
                 SCP[i].extend(temp_sequence)
         
         return CP, SCP
+
+    # @staticmethod
+    # def find_spare_points(list_of_routes, current_route_index):
+    #     """
+    #     Tìm spare point cho một route cụ thể.
+        
+    #     Input:
+    #         - list_of_routes: list chứa các ListOfRoad của các xe
+    #         - current_route_index: index của route cần tìm spare point
+        
+    #     Return:
+    #         - SP: Dictionary với key là node trong SCP, value là spare point tương ứng
+    #     """
+    #     # Bước 1: Tìm CP và SCP
+    #     CP, SCP = BLL.road.Road.find_shared_points(list_of_routes)
+        
+    #     # Nếu xe không có SCP, không cần spare point
+    #     if current_route_index not in SCP or not SCP[current_route_index]:
+    #         return {}
+        
+    #     # Bước 2: Tạo list các nodes cho mỗi route
+    #     route_nodes = []
+    #     for route in list_of_routes:
+    #         nodes = []
+    #         for road in route:
+    #             nodes.append(int(road.StartNode))
+    #             if road == route[-1]:  # Thêm node cuối của đoạn đường cuối
+    #                 nodes.append(int(road.EndNode))
+    #         route_nodes.append(nodes)
+        
+    #     # Bước 3: Tìm tất cả các node đã được sử dụng trong các route
+    #     occupied_nodes = set()
+    #     for i, route in enumerate(route_nodes):
+    #         # Thêm tất cả nodes trong route hiện tại và nodes kề với điểm đầu và cuối
+    #         # (vì có thể xe đang trên đường đến điểm đó)
+    #         occupied_nodes.update(route)
+        
+    #     # Bước 4: Tìm free points (FP) - các node không bị chiếm
+    #     all_nodes = set(range(len(DTO.map_topology.MapTopology.Map)))
+    #     free_points = all_nodes - occupied_nodes
+        
+    #     # Bước 5: Tìm spare point cho mỗi node trong SCP
+    #     SP = {}  # Dictionary lưu spare point cho mỗi node trong SCP
+        
+    #     current_scp = SCP[current_route_index]
+        
+    #     for node in current_scp:
+    #         # Tìm các FP kề với node hiện tại
+    #         connected_fp = []
+    #         node_int = int(node)
+            
+    #         for fp in free_points:
+    #             # Kiểm tra xem FP có liên kết với node không
+    #             distance = BLL.road.Road.GetDistance(node_int, fp)
+    #             if distance < 100000 and distance > 0:  # Có liên kết
+    #                 connected_fp.append((fp, distance))
+            
+    #         # Nếu không có FP kề, tiếp tục node tiếp theo
+    #         if not connected_fp:
+    #             continue
+            
+    #         # Sắp xếp các FP theo khoảng cách tăng dần để lấy node gần nhất
+    #         connected_fp.sort(key=lambda x: x[1])
+            
+    #         # Lấy FP gần nhất làm spare point
+    #         if connected_fp:
+    #             SP[node] = connected_fp[0][0]
+        
+    #     return SP
+
+    @staticmethod
+    def allocate_spare_points(route_index, list_of_routes):
+        """
+        Phân bổ spare points cho một route cụ thể theo thuật toán 4.
+        
+        Input:
+            - route_index: index của route cần phân bổ spare point
+            - list_of_routes: list chứa các ListOfRoad của các xe
+        
+        Return:
+            - SP: List các spare points được phân bổ
+        """
+        # Bước 1: Tìm CP và SCP
+        CP, SCP = BLL.road.Road.find_shared_points(list_of_routes)
+        
+        # Lấy SCP của route hiện tại
+        if route_index not in SCP or not SCP[route_index]:
+            return []
+        
+        current_scp = SCP[route_index]
+        
+        # Bước 2: Tìm tất cả free points
+        # Tạo list các nodes cho mỗi route
+        route_nodes = []
+        for route in list_of_routes:
+            nodes = []
+            for road in route:
+                nodes.append(int(road.StartNode))
+                if road == route[-1]:
+                    nodes.append(int(road.EndNode))
+            route_nodes.append(nodes)
+        
+        # Tìm tất cả các node đã được sử dụng
+        occupied_nodes = set()
+        for route in route_nodes:
+            occupied_nodes.update(route)
+        
+        # Tìm free points
+        all_nodes = set(range(len(DTO.map_topology.MapTopology.Map)))
+        free_points = all_nodes - occupied_nodes
+        
+        # Bước 3: Phân bổ spare points theo thuật toán 4
+        SP = []  # List chứa các spare points được phân bổ
+        
+        for node in current_scp:
+            node_int = int(node)
+            
+            # Tìm các free points kề với node
+            connected_fp = []
+            for fp in free_points:
+                distance = BLL.road.Road.GetDistance(node_int, fp)
+                if distance < 100000 and distance > 0:
+                    connected_fp.append((fp, distance))
+            
+            # Nếu có free points kề
+            if connected_fp:
+                # Sắp xếp theo khoảng cách
+                connected_fp.sort(key=lambda x: x[1])
+                # Chọn điểm gần nhất
+                nearest_fp = connected_fp[0][0]
+                SP.append(nearest_fp)
+            else:
+                # Nếu không có free points kề, trả về rỗng theo thuật toán
+                return []
+        
+        return SP
