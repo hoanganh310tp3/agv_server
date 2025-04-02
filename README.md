@@ -17,8 +17,8 @@ This application is built with:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/agv_3.git
-   cd agv_3/Server/web_management
+   git clone https://github.com/hoanganh310tp3/agv_server.git
+   cd agv_server
    ```
 
 2. Start the application with Docker Compose:
