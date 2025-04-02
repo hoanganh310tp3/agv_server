@@ -1,59 +1,162 @@
-"# agv_3" 
-***khởi động dự án : 
-- tạo môi trường ảo
-- tải các gói về bằng cú pháp pip install -r requirements.txt
-- rồi chạy bằng cú pháp: uvicorn web_management.asgi:application --host 127.0.0.1 --port 8000 --lifespan off
-- set biến môi trường trước khi chạy server : set DJANGO_SETTINGS_MODULE=web_management.settings
+# AGV Management System
 
-***đổi tên app :
-   UPDATE django_content_type SET app_label = 'new_app_name' WHERE app_label = 'old_app_name';
-   UPDATE django_migrations SET app = 'new_app_name' WHERE app = 'old_app_name';
+This is a web-based system for managing and monitoring Automated Guided Vehicles (AGVs) in industrial environments. The system provides real-time tracking, task management, and administration capabilities for AGV fleets.
+
+## System Overview
+
+This application is built with:
+- Django/Django Channels: Web framework and WebSocket support
+- PostgreSQL: Primary database
+- Redis: Cache and WebSocket channel layers
+- MQTT: Communication with AGVs and IoT devices
+- Docker: Containerization for easy deployment
+
+## Installation and Setup
+
+### Option 1: Using Docker (Recommended)
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/agv_3.git
+   cd agv_3/Server/web_management
+   ```
+
+2. Start the application with Docker Compose:
+   ```bash
+   docker-compose up -d
+   ```
+
+3. Access the web application at http://localhost:8000
+
+4. Monitor the database with pgAdmin:
+   - Access pgAdmin at http://localhost:5050
+   - Login with:
+     - Email: admin@example.com
+     - Password: admin
+   - Add a new server with these details:
+     - Name: AGV Database
+     - Host: db
+     - Port: 5432
+     - Database: agv_database12
+     - Username: agv
+     - Password: 123456hadz
+
+### Option 2: Manual Setup
+
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/yourusername/agv_3.git
+   cd agv_3/Server/web_management
+   ```
+
+2. Create a virtual environment:
+   ```bash
+   python -m venv venv
+   ```
+
+3. Activate the virtual environment:
+   ```bash
+   # On Windows
+   venv\Scripts\activate
+   
+   # On macOS/Linux
+   source venv/bin/activate
+   ```
+
+4. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+5. Set environment variable:
+   ```bash
+   # On Windows
+   set DJANGO_SETTINGS_MODULE=web_management.settings
+   
+   # On macOS/Linux
+   export DJANGO_SETTINGS_MODULE=web_management.settings
+   ```
+
+6. Start the application:
+   ```bash
+   uvicorn web_management.asgi:application --host 127.0.0.1 --port 8000 --lifespan off
+   ```
+
+## Configuration
+
+### Environment Variables
+The application can be configured using the following environment variables:
+
+- `DJANGO_SETTINGS_MODULE=web_management.settings`
+- `POSTGRES_DB=agv_database12`
+- `POSTGRES_USER=agv`
+- `POSTGRES_PASSWORD=123456hadz`
+- `POSTGRES_HOST=db` (use `localhost` for manual setup)
+- `POSTGRES_PORT=5432`
+- `MQTT_SERVER=mosquitto` (use appropriate address for manual setup)
+- `MQTT_PORT=1883`
+
+### Docker Compose Configuration
+For Docker deployment, you can modify the settings in the `docker-compose.yml` file.
+
+## Database Management
+
+### Database Setup
+The system uses PostgreSQL as its primary database. When using Docker, the database is automatically configured and migrations are applied.
+
+### Accessing and Managing the Database
+1. Using pgAdmin (recommended):
+   - Connect to pgAdmin as described in the installation section
+   - Use the GUI to manage tables, run queries, and export/import data
+
+2. Direct SQL Access (for advanced users):
+   - Connect to the database container:
+     ```bash
+     docker exec -it web_management_db_1 bash
+     ```
+   - Launch PostgreSQL client:
+     ```bash
+     psql -U agv -d agv_database12
+     ```
+
+### Database Maintenance
+To clear data and reset identity counters:
+```sql
+TRUNCATE TABLE table_name RESTART IDENTITY;
+VACUUM table_name;
+```
+
+## Troubleshooting
+
+### Port Conflicts
+If you encounter port conflicts:
+
+1. Find the process using the port:
+   ```bash
+   # Windows
+   netstat -ano | findstr :8000
+   
+   # Linux/macOS
+   lsof -i :8000
+   ```
+
+2. Kill the process:
+   ```bash
+   # Windows
+   taskkill /PID <PID> /F
+   
+   # Linux/macOS
+   kill -9 <PID>
+   ```
+
+### Docker Issues
+- Restart containers: `docker-compose down && docker-compose up -d`
+- Check logs: `docker-compose logs -f web`
+- Rebuild containers: `docker-compose build --no-cache`
+
+### Database Connectivity Issues
+1. Verify database container is running: `docker-compose ps`
+2. Check database logs: `docker-compose logs db`
+3. Ensure correct connection settings in your configuration
 
 
-***test api cho agv_identify :
-{
-         "agv_id": 1,
-         "maximum_speed": 100,
-         "parking_lot": 1,
-         "battery_capacity": 1000,
-         "maximum_load": 500,
-         "guidance_type": "line_following",
-         "load_transfer": "Automatic",
-         "operation": true,
-         "connection": true
-     }
-
-***test api cho material_management :
-     {
-         "material_name": "Steel",
-         "material_unit": "KG",
-         "material_weight": 1000
-     }
-
-7A14020014031E7832000A000F025828A0015B7F
-7A1401000A012328FF00050008042C30D400897F
-7A1403001E02201C64000F001203E83A9800F27F
-7A140400280419284B0014001905DC4B00012C7F
-7A14050032012580780019001E07D05DC001A37F
-
-7A09020001141F40020101017F
-
-***cách xóa dữ liệu trong bảng agv_management_agv_data của database:
-- Mở pgAdmin 4 và chọn database
-- Mở query tool
-- Xóa toàn bộ dữ liệu trong bảng và đặt lại giá trị của một cột id (là khóa chính) về 1 trong PostgreSQL sau khi xóa toàn bộ dữ liệu của bảng:
-
-TRUNCATE TABLE ten_bang RESTART IDENTITY;
-
-- Để tối ưu hóa dung lượng và giúp database hoạt động trơn tru hơn, chạy lệnh VACUUM trên bảng đã xóa, đảm bảo dung lượng được giải phóng trong database :
-
-VACUUM ten_bang;
-
-*** cách giải phóng các cổng đang được kết nối:
-- Xem các cổng đang được kết nối: 
-
-netstat -ano | findstr :5173
-
-- Kết thúc tiến trình sử dụng cổng: 
-
-taskkill /PID <PID> /F
