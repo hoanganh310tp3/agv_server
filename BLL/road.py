@@ -77,14 +77,22 @@ class Road:
         CP = {}  # Common Points
         SCP = {} # Sequential Common Points
         
-        # Tạo list các nodes cho mỗi route
+        # Tạo list các nodes cho mỗi route bằng cách trích xuất TravelledNode
         route_nodes = []
         for route in list_of_routes:
+            # Xây dựng lại TravelledNode từ các Road segments
             nodes = []
+            if not route:
+                route_nodes.append(nodes)
+                continue
+            
+            # Thêm điểm đầu tiên của đoạn đường đầu tiên
+            nodes.append(route[0].FirstNode)
+            
+            # Thêm tất cả các điểm cuối của từng đoạn đường
             for road in route:
-                nodes.append(road.StartNode)
-                if road == route[-1]:  # Thêm node cuối của đoạn đường cuối
-                    nodes.append(road.EndNode)
+                nodes.append(road.SecondNode)
+            
             route_nodes.append(nodes)
         
         # Tìm điểm chung (CP) cho mỗi route

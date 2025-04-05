@@ -7,6 +7,7 @@ class ControlSignal:
         self.Road = Road
         self.Velocity = DTO.agv_car.AGVCar.MaxVelocity
         self.Action = 1
+        self.waitTime = 0  # Thêm thuộc tính waitTime
         # self.Action = [0, 1, 2, 3, 4]
 
 # 0 stop

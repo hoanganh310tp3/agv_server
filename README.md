@@ -153,10 +153,24 @@ If you encounter port conflicts:
 - Restart containers: `docker-compose down && docker-compose up -d`
 - Check logs: `docker-compose logs -f web`
 - Rebuild containers: `docker-compose build --no-cache`
+- Rebuild containers after code or dependency changes: `docker-compose build`
+- Remove all volumes (⚠️ data will be lost): `docker-compose down -v`
 
 ### Database Connectivity Issues
 1. Verify database container is running: `docker-compose ps`
 2. Check database logs: `docker-compose logs db`
 3. Ensure correct connection settings in your configuration
+ 
+### Command-line interface (CLI) command for running Django management commands inside a Docker container
+
+Purpose	Command	Notes
+1. 🔄 Apply database migrations:	docker-compose exec web python manage.py migrate	
+2. 🏗️ Create migration files from models.py: docker-compose exec web python manage.py makemigrations	
+3. 👤 Create superuser:	docker-compose exec web python manage.py createsuperuser	
+4. 🧪 Run Django development server: docker-compose exec web python manage.py runserver 0.0.0.0:8000 (0.0.0.0 allows access from outside the container)
+5. 🐍 Access Django Python shell: docker-compose exec web python manage.py shell	
+6. 🖥️ Access container shell: docker-compose exec web sh (or bash)	
+7. ⚙️ Install Python packages inside container:	docker-compose exec web pip install <package>	
+8. 💾 Collect static files	docker-compose exec web: python manage.py collectstatic
 
 

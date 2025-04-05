@@ -20,16 +20,17 @@ class Constrains:
     @staticmethod
     def CollisionConstrain(TimeStart, Road, ResidualPath=None):
         """
-        Kiểm tra và xử lý va chạm với logic mới sử dụng dynamic shared point
+        Kiểm tra và xử lý va chạm với logic DSPA (Dynamic Shared Point Allocation)
         Input:
             TimeStart: Thời điểm bắt đầu
             Road: Đoạn đường đang xét
             ResidualPath: Đường đi còn lại của xe (optional)
         Return:
-            ControlSignal: Tín hiệu điều khiển cho xe
+            ControlSignal: Tín hiệu điều khiển cho xe với thêm thuộc tính waitTime
         """
-        Test = BLL.convert.Convert.returnTimeStampToTime(TimeStart)
         ControlSignal = DTO.control_signal.ControlSignal(Road)
+        # Thêm thuộc tính waitTime
+        ControlSignal.waitTime = 0
         
         # Khởi tạo trạng thái hiện tại của xe
         current_state = Constrains.AGVState()
@@ -68,115 +69,130 @@ class Constrains:
         if route_index != -1 and route_index in SCP:
             in_scp = current_state.secondNode in SCP[route_index]
         
-        # Condition 1: Điểm tiếp theo không bị chiếm bởi xe khác
-        second_node_is_free = current_state.secondNode not in [p.reservedPoint for p in other_positions]
+        # Danh sách các điểm reserved bởi xe khác
+        reserved_points = [p.SecondNode for p in other_positions]
         
-        if second_node_is_free:
-            if not in_scp:
-                # Trường hợp bình thường - di chuyển không vào SCP
+        # Điều kiện 1: SecondNode không thuộc SCP và không bị reserved bởi xe khác
+        if not in_scp and current_state.secondNode not in reserved_points:
+            current_state.SA = 1  # Xe di chuyển bình thường
+            current_state.F = 0   # Không đi vào SCP
+            return ControlSignal
+        
+        # Điều kiện 2: SecondNode thuộc SCP và không có điểm nào trong SCP bị reserved 
+        # bởi xe khác với F=0
+        if in_scp:
+            scp_is_free = True
+            for node in SCP[route_index]:
+                for pos in other_positions:
+                    # Kiểm tra nếu node này là reserved point của xe khác
+                    if node == pos.SecondNode:
+                        # Lấy F của xe khác
+                        other_schedule = next((s for s in DTO.schedule.Schedule.ListOfSchedule 
+                                            if s.Car == pos.Car), None)
+                        other_F = 0
+                        if hasattr(other_schedule, 'F'):
+                            other_F = other_schedule.F
+                        
+                        # Nếu xe khác có F=0, SCP không trống
+                        if other_F == 0:
+                            scp_is_free = False
+                            break
+        
+            # Nếu SCP trống hoặc chỉ có xe với F=1, xe có thể đi
+            if scp_is_free and current_state.secondNode not in reserved_points:
                 current_state.SA = 1
-                current_state.F = 0
+                current_state.F = 1  # Đang đi vào SCP
                 return ControlSignal
-            else:
-                # Condition 2: Nếu secondNode thuộc SCP, kiểm tra tất cả các điểm trong SCP
-                scp_is_free = True
+        
+        # Điều kiện 3: SecondNode thuộc SCP và có điểm trong SCP bị reserved, nhưng
+        # xe khác chưa đi vào SCP (F=0) và có spare points
+        if in_scp:
+            # Tìm spare points
+            spare_points = BLL.road.Road.allocate_spare_points(route_index, list_of_routes)
+            
+            # Kiểm tra xem có điểm nào trong SCP bị reserved bởi xe khác với F=0 không
+            other_car_reserved_scp = False
+            for node in SCP[route_index]:
+                for pos in other_positions:
+                    if node == pos.SecondNode:
+                        other_schedule = next((s for s in DTO.schedule.Schedule.ListOfSchedule 
+                                            if s.Car == pos.Car), None)
+                        other_F = 0
+                        if hasattr(other_schedule, 'F'):
+                            other_F = other_schedule.F
+                        
+                        if other_F == 0:
+                            other_car_reserved_scp = True
+                            break
+            
+            # Nếu có spare points và SecondNode không bị reserved
+            if spare_points and other_car_reserved_scp and current_state.secondNode not in reserved_points:
+                current_state.SP = spare_points
+                current_state.SA = 1
+                current_state.F = 1
                 
-                # Kiểm tra xem các điểm trong SCP có bị chiếm không
-                for node in SCP[route_index]:
-                    for pos in other_positions:
-                        # Nếu điểm đã bị chiếm nhưng xe chiếm đang di chuyển trong SCP (F=1)
-                        # thì vẫn có thể di chuyển
-                        if (node == pos.firstNode or node == pos.reservedPoint):
-                            other_schedule = next((s for s in DTO.schedule.Schedule.ListOfSchedule 
-                                                if s.Car == pos.Car), None)
-                            other_F = 0  # Giả định mặc định
-                            
-                            if hasattr(other_schedule, 'F'):
-                                other_F = other_schedule.F
-                                
-                            if other_F != 1:
-                                scp_is_free = False
-                                break
+                # Nếu xe đã đi vào SCP (F=1) và firstNode là spare point, xóa nó khỏi SP
+                if current_state.firstNode in spare_points:
+                    current_state.SP.remove(current_state.firstNode)
                 
-                if scp_is_free:
-                    # Trường hợp SCP trống hoặc chỉ có xe với F=1
-                    current_state.SA = 1
-                    current_state.F = 1
+                return ControlSignal
+        
+        # Xử lý deadlock
+        # Kiểm tra Heading-on deadlock
+        for pos in other_positions:
+            # Heading-on deadlock: SecondNode của xe này là FirstNode của xe khác và ngược lại
+            if current_state.secondNode == pos.FirstNode and pos.SecondNode == current_state.firstNode:
+                # Nếu xe hiện tại có F=1 (đã đi vào SCP), sử dụng spare point
+                if current_state.F == 1:
+                    spare_points = BLL.road.Road.allocate_spare_points(route_index, list_of_routes)
+                    if spare_points:
+                        nearest_spare = spare_points[0]
+                        # Di chuyển tới spare point
+                        ControlSignal.Road = DTO.road.Road(
+                            current_state.firstNode,
+                            nearest_spare,
+                            BLL.road.Road.GetDistance(current_state.firstNode, nearest_spare),
+                            0
+                        )
+                        # Thêm thuộc tính waitTime
+                        ControlSignal.waitTime = 0
+                        return ControlSignal
+                else:
+                    # Xe khác sẽ di chuyển - hiện tại đợi tại chỗ
+                    current_state.SA = 2  # Waiting
+                    # Sử dụng cách dừng xe từ thuật toán cũ
+                    ControlSignal.Road = DTO.road.Road(0, 0, 100000)
+                    ControlSignal.waitTime = 5  # Thời gian đợi mặc định 5s
                     return ControlSignal
         
-        # Condition 3: Áp dụng spare points
-        spare_points = BLL.road.Road.allocate_spare_points(route_index, list_of_routes)
-        if spare_points:
-            current_state.SP = spare_points
-            current_state.SA = 1
-            current_state.F = 1
-            
-            # Nếu xe đã đi vào SCP (F=1), cập nhật spare point
-            if current_state.F == 1 and current_state.firstNode in spare_points:
-                current_state.SP.remove(current_state.firstNode)
-            
-            # Cập nhật đường đi - thêm spare point vào
-            if current_state.residualPath:
-                nearest_spare = spare_points[0]  # Lấy spare point đầu tiên
-                # Tạo đường đi tạm thời để tránh deadlock
+        # Kiểm tra Loop deadlock
+        is_loop_deadlock = Constrains._check_loop_deadlock(TimeStart, current_state, other_positions)
+        if is_loop_deadlock:
+            spare_points = BLL.road.Road.allocate_spare_points(route_index, list_of_routes)
+            if spare_points and current_state.F == 1:
+                # Di chuyển tới spare point
+                nearest_spare = spare_points[0]
                 ControlSignal.Road = DTO.road.Road(
                     current_state.firstNode,
                     nearest_spare,
                     BLL.road.Road.GetDistance(current_state.firstNode, nearest_spare),
                     0
                 )
+                ControlSignal.waitTime = 0
                 return ControlSignal
-        
-        # Xử lý deadlock
-        for pos in other_positions:
-            # Heading-on deadlock
-            if current_state.secondNode == pos.firstNode and pos.secondNode == current_state.firstNode:
-                if current_state.F == 1:
-                    # Xe hiện tại đi vào spare point
-                    if spare_points:
-                        nearest_spare = spare_points[0]
-                        ControlSignal.Road = DTO.road.Road(
-                            current_state.firstNode,
-                            nearest_spare,
-                            BLL.road.Road.GetDistance(current_state.firstNode, nearest_spare),
-                            0
-                        )
-                        return ControlSignal
-                else:
-                    # Xe khác sẽ di chuyển tới spare point - giữ nguyên vị trí hiện tại
-                    current_state.SA = 2  # Đợi
-                    ControlSignal.Road = DTO.road.Road(
-                        current_state.firstNode,
-                        current_state.firstNode,  # Giữ nguyên vị trí
-                        0,
-                        0
-                    )
-                    return ControlSignal
-            
-            # Cross/Loop deadlock
-            elif pos.secondNode == current_state.firstNode:
-                # Kiểm tra loop deadlock
-                is_deadlock = Constrains._check_loop_deadlock(TimeStart, current_state, other_positions)
-                if is_deadlock:
-                    if current_state.F == 1 and spare_points:
-                        # Di chuyển tới spare point
-                        nearest_spare = spare_points[0]
-                        ControlSignal.Road = DTO.road.Road(
-                            current_state.firstNode,
-                            nearest_spare,
-                            BLL.road.Road.GetDistance(current_state.firstNode, nearest_spare),
-                            0
-                        )
-                        return ControlSignal
+            else:
+                # Đợi tại chỗ
+                current_state.SA = 2
+                # Sử dụng cách dừng xe từ thuật toán cũ
+                ControlSignal.Road = DTO.road.Road(0, 0, 100000)
+                ControlSignal.waitTime = 5  # Thời gian đợi mặc định
+                return ControlSignal
         
         # Nếu không thỏa mãn điều kiện nào - đợi tại chỗ
         current_state.SA = 2
-        ControlSignal.Road = DTO.road.Road(
-            current_state.firstNode,
-            current_state.firstNode,
-            0,
-            0
-        )
+        # Sử dụng cách dừng xe từ thuật toán cũ
+        ControlSignal.Road = DTO.road.Road(0, 0, 100000)
+        ControlSignal.waitTime = 0
         return ControlSignal
 
     @staticmethod
@@ -190,8 +206,8 @@ class Constrains:
         # Tạo dictionary ánh xạ từ firstNode đến secondNode
         next_moves = {}
         for pos in other_positions:
-            if pos.firstNode and pos.secondNode:
-                next_moves[pos.firstNode] = pos.secondNode
+            if pos.FirstNode and pos.SecondNode:
+                next_moves[pos.FirstNode] = pos.SecondNode
         
         # Thêm current_state vào
         next_moves[current_state.firstNode] = current_state.secondNode

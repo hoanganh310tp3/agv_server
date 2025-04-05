@@ -45,26 +45,51 @@ def insertAGVIdentify(AGVIdentify, carID):
         }
     )
     
-def insertOrder(Order):
-    query = schedule_data.objects.filter(order_number = Order.Order, order_date = Order.Date)
-    if query:
-        query.delete()
-    else:
-        pass
-    schedule_data.objects.create(order_number = Order.Order,
-                                load_name = Order.Name,
-                                load_weight = Order.LoadWeight,
-                                load_amount = Order.LoadAmount,
-                                order_date = Order.Date,
-                                agv_id = Order.get_car_id(),
-                                est_energy = Order.TotalEnergy, #maybe wrong
-                                est_distance = Order.get_total_distance(),
-                                est_start_time = Order.TimeStart,
-                                est_end_time = Order.TimeEnd,
-                                start_point = Order.Inbound,
-                                end_point = Order.Outbound,
-                                instruction_set = json.dumps(Order.list_control_signal()))
+# def insertOrder(Order):
+#     query = schedule_data.objects.filter(order_number = Order.Order, order_date = Order.Date)
+#     if query:
+#         query.delete()
+#     else:
+#         pass
+#     schedule_data.objects.create(order_number = Order.Order,
+#                                 load_name = Order.Name,
+#                                 load_weight = Order.LoadWeight,
+#                                 load_amount = Order.LoadAmount,
+#                                 order_date = Order.Date,
+#                                 agv_id = Order.get_car_id(),
+#                                 est_energy = Order.TotalEnergy, #maybe wrong
+#                                 est_distance = Order.get_total_distance(),
+#                                 est_start_time = Order.TimeStart,
+#                                 est_end_time = Order.TimeEnd,
+#                                 start_point = Order.Inbound,
+#                                 end_point = Order.Outbound,
+#                                 instruction_set = json.dumps(Order.list_control_signal()))
     
+#     order_data.objects.filter(order_number = Order.Order).update(is_scheduled = True)
+    
+
+def insertOrder(Order, replace_existing=False):
+       # Chỉ xóa lịch cũ nếu replace_existing=True
+    if replace_existing:
+        query = schedule_data.objects.filter(order_number=Order.Order, order_date=Order.Date)
+        if query:
+            query.delete()
+               
+       # Thêm thông tin phiên lập lịch để phân biệt
+    schedule_data.objects.create(
+        order_number=Order.Order,
+        load_name = Order.Name,
+        load_weight = Order.LoadWeight,
+        load_amount = Order.LoadAmount,
+        order_date = Order.Date,
+        agv_id = Order.get_car_id(),
+        est_energy = Order.TotalEnergy, #maybe wrong
+        est_distance = Order.get_total_distance(),
+        est_start_time = Order.TimeStart,
+        est_end_time = Order.TimeEnd,
+        start_point = Order.Inbound,
+        end_point = Order.Outbound,
+        session_id=timezone.now().strftime("%Y%m%d%H%M%S"),  # Thêm trường mới để phân biệt
+        instruction_set=json.dumps(Order.list_control_signal())
+       )
     order_data.objects.filter(order_number = Order.Order).update(is_scheduled = True)
-    
-    

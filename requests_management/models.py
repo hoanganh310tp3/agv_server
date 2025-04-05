@@ -36,7 +36,8 @@ class schedule_data(models.Model):
     end_point = models.IntegerField(default=0)
     is_processed = models.BooleanField(default=False)
     instruction_set  = models.JSONField()
-    
+    session_id = models.CharField(max_length=14, default='00000000000000')
+
     def __str__(self):
         return "Order #{ID}".format(ID =self.order_number)
 
