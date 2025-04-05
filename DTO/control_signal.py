@@ -7,6 +7,7 @@ class ControlSignal:
         self.Road = Road
         self.Velocity = DTO.agv_car.AGVCar.MaxVelocity
         self.Action = 1
+        self.waitTime = 0
         # self.Action = [0, 1, 2, 3, 4]
 
 # 0 stop
@@ -16,7 +17,7 @@ class ControlSignal:
 # 4 reverse
 
     def __str__(self):
-        return f"{self.Road.FirstNode} {self.Road.SecondNode} {self.Velocity} {self.Action}"
+        return f"{self.Road.FirstNode} {self.Road.SecondNode} {self.Velocity} {self.Action} {self.waitTime}"
 
 
 

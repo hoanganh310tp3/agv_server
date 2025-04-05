@@ -19,4 +19,9 @@ class ControlSignal:
                 Element.Velocity = 0.1
             else:
                 Element.Velocity = 0.1
+            
+            # Make sure waitTime is preserved or set to default
+            if not hasattr(Element, 'waitTime'):
+                Element.waitTime = 0
+        
         return ListOfControlSignal

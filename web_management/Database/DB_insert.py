@@ -46,24 +46,62 @@ def insertAGVIdentify(AGVIdentify, carID):
     )
     
 def insertOrder(Order):
-    query = schedule_data.objects.filter(order_number = Order.Order, order_date = Order.Date)
-    if query:
-        query.delete()
-    else:
-        pass
-    schedule_data.objects.create(order_number = Order.Order,
-                                load_name = Order.Name,
-                                load_weight = Order.LoadWeight,
-                                order_date = Order.Date,
-                                agv_id = Order.get_car_id(),
-                                est_energy = Order.TotalEnergy, #maybe wrong
-                                est_distance = Order.get_total_distance(),
-                                est_start_time = Order.TimeStart,
-                                est_end_time = Order.TimeEnd,
-                                start_point = Order.Inbound,
-                                end_point = Order.Outbound,
-                                instruction_set = json.dumps(Order.list_control_signal()))
+    """
+    Inserts a schedule for an order into the database.
+    Validates all required attributes before attempting to create the database entry.
     
-    order_data.objects.filter(order_number = Order.Order).update(is_scheduled = True)
+    Args:
+        Order: A Schedule object containing order data
+        
+    Returns:
+        bool: True if the insertion was successful, False otherwise
+        
+    Raises:
+        AttributeError: If a required attribute is missing
+    """
+    if Order is None:
+        raise AttributeError("Cannot insert None order")
+        
+    # Validate all required attributes first
+    required_attrs = ['Order', 'Name', 'LoadWeight', 'Date', 'TimeStart', 
+                      'TimeEnd', 'Inbound', 'Outbound']
+    
+    for attr in required_attrs:
+        if not hasattr(Order, attr) or getattr(Order, attr) is None:
+            raise AttributeError(f"Order is missing required attribute: {attr}")
+    
+    try:
+        # Make sure car_id is available
+        car_id = Order.get_car_id()
+        if car_id is None or car_id == "":
+            raise AttributeError("Order has no valid car_id")
+            
+        # Try to generate control signals
+        instruction_set = json.dumps(Order.list_control_signal())
+            
+        # Create a new schedule entry
+        new_schedule = schedule_data.objects.create(
+            order_number=Order.Order,
+            load_name=Order.Name,
+            load_weight=Order.LoadWeight,
+            order_date=Order.Date,
+            agv_id=car_id,
+            est_energy=Order.TotalEnergy, 
+            est_distance=Order.get_total_distance(),
+            est_start_time=Order.TimeStart,
+            est_end_time=Order.TimeEnd,
+            start_point=Order.Inbound,
+            end_point=Order.Outbound,
+            instruction_set=instruction_set
+        )
+        
+        # Update the order to mark it as scheduled
+        updated_count = order_data.objects.filter(order_number=Order.Order).update(is_scheduled=True)
+        
+        return True
+        
+    except Exception as e:
+        # Re-raise the exception so the caller can handle it
+        raise Exception(f"Error inserting order {getattr(Order, 'Order', 'unknown')}: {str(e)}")
     
     

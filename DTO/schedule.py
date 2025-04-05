@@ -35,10 +35,10 @@ class Schedule:
         ControlSignal = list()
         ControlSignal.append(self.get_car_id())
         for EachControlSignal in self.ListOfControlSignal:
-            ControlSignal.append([EachControlSignal.Road.FirstNode, EachControlSignal.Road.SecondNode, EachControlSignal.Velocity, EachControlSignal.Road.Distance, EachControlSignal.Road.Direction])
+            ControlSignal.append([EachControlSignal.Road.FirstNode, EachControlSignal.Road.SecondNode, EachControlSignal.Velocity, EachControlSignal.Road.Distance, EachControlSignal.Road.Direction, EachControlSignal.waitTime])
          
         length = len(self.ListOfControlSignal)-1
-        ControlSignal.append([self.ListOfControlSignal[length].Road.SecondNode, self.ListOfControlSignal[length].Road.SecondNode, 0, 0, 0])
+        ControlSignal.append([self.ListOfControlSignal[length].Road.SecondNode, self.ListOfControlSignal[length].Road.SecondNode, 0, 0, 0, 0])
         return ControlSignal
 
     

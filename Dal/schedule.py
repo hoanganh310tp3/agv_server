@@ -36,6 +36,7 @@ class Schedule:
                 f.write(str(EachControlSignal.Road.SecondNode))
                 f.write("("+ str(EachControlSignal.Road.Distance) +" m)")
                 f.write("("+ str(EachControlSignal.Velocity) +" m/s)")
+                f.write("("+ str(EachControlSignal.waitTime) +" s)")
                 f.write(",")
             f.write("\n")  
         f.close()
