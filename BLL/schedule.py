@@ -8,11 +8,19 @@ import BLL.car_selection
 import BLL.schedule
 import logging
 
+# Fixed parking spots for each AGV
+PARKING_SPOTS = {
+    1: 0,  # AGV 1 parks at spot 0
+    2: 1,  # AGV 2 parks at spot 1
+    3: 2   # AGV 3 parks at spot 2
+}
+
 class Schedule:
     @staticmethod
     def returnSchedule(Requirement, SelectedCarTrip, SelectedTransportingTrip):
         """
         Creates a schedule for a specific requirement using the selected car and route.
+        Also includes the return path to parking spot.
         
         Args:
             Requirement: The delivery requirement to be scheduled
@@ -56,17 +64,34 @@ class Schedule:
             Schedule.TimeStart = Requirement.TimeStart
             Schedule.LoadWeight = Requirement.LoadWeight
             
-            # Merge control signals from car trip and transport trip
-            if (not hasattr(SelectedCarTrip, 'Cost') or 
-                not hasattr(SelectedCarTrip.Cost, 'ListOfControlSignal')):
-                logger.error(f"Cannot create schedule for Order #{Requirement.Order}: Missing control signals in car trip")
-                return None
+            # Get the AGV's assigned parking spot
+            agv_id = int(Schedule.Car.CarId)
+            parking_spot = PARKING_SPOTS.get(agv_id)
             
-            if not hasattr(SelectedTransportingTrip, 'ListOfControlSignal'):
-                logger.error(f"Cannot create schedule for Order #{Requirement.Order}: Missing control signals in transport trip")
+            if parking_spot is None:
+                logger.error(f"No parking spot assigned for AGV {agv_id}")
                 return None
-            
-            Schedule.ListOfControlSignal = SelectedCarTrip.Cost.ListOfControlSignal + SelectedTransportingTrip.ListOfControlSignal
+
+            # Find path to parking spot using ABC algorithm
+            NewABC = BLL.abc.ABC()
+            parking_return_trip = NewABC.ABCAlgorithm(
+                NewABC,
+                Requirement.Outbound,  # From delivery point
+                parking_spot,          # To parking spot
+                0,                     # No load when returning
+                0                      # Time doesn't matter for parking return
+            )
+
+            if not parking_return_trip:
+                logger.error(f"Could not find path to parking spot {parking_spot} for AGV {agv_id}")
+                return None
+
+            # Combine all control signals: car trip + transport trip + parking return trip
+            Schedule.ListOfControlSignal = (
+                SelectedCarTrip.Cost.ListOfControlSignal + 
+                SelectedTransportingTrip.ListOfControlSignal +
+                parking_return_trip.ListOfControlSignal
+            )
             
             # Generate control signal format for MQTT
             try:
@@ -75,7 +100,7 @@ class Schedule:
                 logger.error(f"Error generating control signals for Order #{Requirement.Order}: {cs_error}")
                 return None
             
-            # Calculate end time
+            # Calculate end time including return to parking
             try:
                 TimeStamp = BLL.convert.Convert.TimeToTimeStamp(Schedule.TimeStart)
                 TravelTime = BLL.convert.Convert.returnScheduleToTravellingTime(Schedule.ListOfControlSignal)
@@ -84,9 +109,14 @@ class Schedule:
                 logger.error(f"Error calculating end time for Order #{Requirement.Order}: {time_error}")
                 return None
             
-            # Calculate energy and distance
+            # Calculate total energy and distance including return to parking
             try:
-                Schedule.TotalEnergy = round(SelectedCarTrip.Cost.CostValue + SelectedTransportingTrip.CostValue, 3)
+                Schedule.TotalEnergy = round(
+                    SelectedCarTrip.Cost.CostValue + 
+                    SelectedTransportingTrip.CostValue + 
+                    parking_return_trip.CostValue, 
+                    3
+                )
                 Schedule.TotalDistance = Schedule.get_total_distance()
             except Exception as calc_error:
                 logger.error(f"Error calculating energy/distance for Order #{Requirement.Order}: {calc_error}")
@@ -107,7 +137,7 @@ class Schedule:
             if hasattr(Schedule.Car, 'ScheduleList'):
                 Schedule.Car.ScheduleList.append(Schedule)
             
-            logger.info(f"Successfully created schedule for Order #{Requirement.Order}")
+            logger.info(f"Successfully created schedule for Order #{Requirement.Order} with return to parking spot {parking_spot}")
             return Schedule
         
         except Exception as e:

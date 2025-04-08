@@ -3,6 +3,8 @@ import DTO.schedule
 import BLL.convert
 import Dal.schedule
 import DTO.requirement
+import BLL.position
+import DTO.agv_car
 
 from web_management.mqtt import publishMsg
 from web_management.Database.DB_insert import insertOrder
@@ -15,6 +17,7 @@ import datetime
 import time
 import sched
 from threading import Thread
+import asyncio
 
 from .models import schedule_data
 
@@ -283,10 +286,7 @@ def resched_agv(orderNum):
 
 def update_agv_positions():
     """
-    Updates AGV positions without regenerating schedules.
-    This function retrieves existing active schedules and updates the position data
-    based on the current time, but doesn't change the schedules themselves.
-    Only updates AGVs with active orders (not completed).
+    Updates AGV positions using Position.returnPosition for accurate position calculation
     """
     try:
         logger.info("Updating AGV positions")
@@ -305,95 +305,78 @@ def update_agv_positions():
         
         updated_count = 0
         for schedule in active_schedules:
-            # Parse the instruction set
-            instruction_set = json.loads(schedule.instruction_set)
-            
-            # Get the schedule times
-            start_time = f"{schedule.order_date} {schedule.est_start_time}"
-            end_time = f"{schedule.order_date} {schedule.est_end_time}"
-            
-            start_timestamp = time.mktime(time.strptime(start_time, "%Y-%m-%d %H:%M:%S"))
-            end_timestamp = time.mktime(time.strptime(end_time, "%Y-%m-%d %H:%M:%S"))
-            
-            # Skip schedules that haven't started yet
-            if start_timestamp > now_timestamp:
-                continue
+            try:
+                # Parse the instruction set
+                instruction_set = json.loads(schedule.instruction_set)
                 
-            # Check if the schedule has completed
-            if end_timestamp < now_timestamp:
-                # Mark as processed/completed
-                schedule.is_processed = True
-                schedule.save()
-                logger.info(f"Marked schedule {schedule.schedule_id} as completed")
-                continue
+                # Get the schedule times
+                start_time = f"{schedule.order_date} {schedule.est_start_time}"
+                end_time = f"{schedule.order_date} {schedule.est_end_time}"
                 
-            # Calculate elapsed time since schedule started
-            elapsed_time = now_timestamp - start_timestamp
-            
-            # Get the AGV car ID
-            agv_id = instruction_set[0]
-            
-            # Get list of control signals
-            control_signals = instruction_set[1:-1]  # Skip first (ID) and last (end point)
-            
-            # Calculate current position
-            current_position = {
-                "agv_id": agv_id,
-                "current_time": now.strftime("%H:%M:%S"),
-                "elapsed_time": elapsed_time,
-                "position_updated": True,
-                "is_active": True
-            }
-            
-            # Simple logic: Calculate how far along the route the AGV should be
-            total_distance = schedule.est_distance
-            total_time = end_timestamp - start_timestamp
-            
-            if total_time > 0:
-                # Calculate progress as a percentage
-                progress = min(1.0, elapsed_time / total_time)
-                current_position["progress_percent"] = round(progress * 100, 2)
+                start_timestamp = time.mktime(time.strptime(start_time, "%Y-%m-%d %H:%M:%S"))
+                end_timestamp = time.mktime(time.strptime(end_time, "%Y-%m-%d %H:%M:%S"))
                 
-                # Find current segment
-                distance_covered = progress * total_distance
-                current_position["distance_covered"] = round(distance_covered, 2)
-                
-                cumulative_distance = 0
-                current_segment = 0
-                
-                for i, signal in enumerate(control_signals):
-                    segment_distance = signal[3]  # Distance of this segment
-                    if cumulative_distance + segment_distance >= distance_covered:
-                        current_segment = i
-                        break
-                    cumulative_distance += segment_distance
-                
-                # Set current position details
-                if current_segment < len(control_signals):
-                    current_signal = control_signals[current_segment]
-                    current_position["first_node"] = current_signal[0]
-                    current_position["second_node"] = current_signal[1]
-                    current_position["segment"] = current_segment
+                # Skip schedules that haven't started yet
+                if start_timestamp > now_timestamp:
+                    continue
                     
-                    # Calculate distance traveled within current segment
-                    segment_progress = (distance_covered - cumulative_distance) / current_signal[3]
-                    current_position["segment_progress"] = round(segment_progress * 100, 2)
-                    
-                    # Include waitTime if applicable
-                    if len(current_signal) > 5:
-                        current_position["wait_time"] = current_signal[5]
+                # Check if the schedule has completed
+                if end_timestamp < now_timestamp:
+                    # Mark as processed/completed
+                    schedule.is_processed = True
+                    schedule.save()
+                    logger.info(f"Marked schedule {schedule.schedule_id} as completed")
+                    continue
+
+                # Create a Schedule object for position calculation
+                current_schedule = DTO.schedule.Schedule()
+                current_schedule.TimeStart = schedule.est_start_time
+                current_schedule.TimeEnd = schedule.est_end_time
                 
-                # Publish position update via MQTT
-                topic = f"AGVPosition/{agv_id}"
-                publishMsg(topic, json.dumps(current_position))
+                # Create Car object
+                current_schedule.Car = DTO.agv_car.AGVCar()
+                current_schedule.Car.CarId = instruction_set[0]
+                
+                # Convert instruction set to ListOfControlSignal
+                current_schedule.ListOfControlSignal = []
+                for i in range(1, len(instruction_set)-1):  # Skip first (ID) and last (endpoint)
+                    control_signal = DTO.control_signal.ControlSignal()
+                    control_signal.Road = DTO.road.Road(
+                        instruction_set[i][0],  # FirstNode
+                        instruction_set[i][1],  # SecondNode
+                        instruction_set[i][3]   # Distance
+                    )
+                    control_signal.Velocity = instruction_set[i][2]  # Velocity
+                    current_schedule.ListOfControlSignal.append(control_signal)
+                
+                # Calculate current position using Position.returnPosition
+                current_time = now.strftime("%H:%M:%S")
+                position = BLL.position.Position.returnPosition(current_time, current_schedule)
+                
+                # Create position data for MQTT
+                position_data = {
+                    "agv_id": str(current_schedule.Car.CarId),
+                    "current_time": current_time,
+                    "first_node": position.FirstNode,
+                    "second_node": position.SecondNode,
+                    "travelled_distance": position.TravelledDistance,
+                    "is_active": True
+                }
+                
+                # Publish position update
+                topic = f"AGVPosition/{current_schedule.Car.CarId}"
+                publishMsg(topic, json.dumps(position_data))
                 updated_count += 1
-        
-        logger.info(f"Updated positions for {updated_count} active AGVs")
-        return updated_count
-        
+                
+            except Exception as schedule_error:
+                logger.error(f"Error processing schedule {schedule.schedule_id}: {schedule_error}")
+                continue
+
+        if updated_count > 0:
+            logger.info(f"Updated positions for {updated_count} active AGVs")
+            
     except Exception as e:
         logger.error(f"Error updating AGV positions: {e}")
-        return 0
 
 def start_position_update_thread(update_interval=5):
     """
