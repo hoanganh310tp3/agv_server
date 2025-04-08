@@ -1,59 +1,115 @@
-"# agv_3" 
-***khởi động dự án : 
-- tạo môi trường ảo
-- tải các gói về bằng cú pháp pip install -r requirements.txt
-- rồi chạy bằng cú pháp: uvicorn web_management.asgi:application --host 127.0.0.1 --port 8000 --lifespan off
-- set biến môi trường trước khi chạy server : set DJANGO_SETTINGS_MODULE=web_management.settings
+# AGV Server
 
-***đổi tên app :
-   UPDATE django_content_type SET app_label = 'new_app_name' WHERE app_label = 'old_app_name';
-   UPDATE django_migrations SET app = 'new_app_name' WHERE app = 'old_app_name';
+A sophisticated server application for managing and controlling Automated Guided Vehicles (AGVs) in an industrial environment. This project implements advanced algorithms for path planning, collision avoidance, and resource optimization.
 
+## Features
 
-***test api cho agv_identify :
-{
-         "agv_id": 1,
-         "maximum_speed": 100,
-         "parking_lot": 1,
-         "battery_capacity": 1000,
-         "maximum_load": 500,
-         "guidance_type": "line_following",
-         "load_transfer": "Automatic",
-         "operation": true,
-         "connection": true
-     }
+- Real-time AGV fleet management
+- Dynamic path planning and routing
+- Collision avoidance using Dynamic Shared Point Allocation (DSPA)
+- Material handling and inventory management
+- Battery and energy consumption monitoring
+- Automated parking management
+- Web-based monitoring and control interface
 
-***test api cho material_management :
-     {
-         "material_name": "Steel",
-         "material_unit": "KG",
-         "material_weight": 1000
-     }
+## Technology Stack
 
-7A14020014031E7832000A000F025828A0015B7F
-7A1401000A012328FF00050008042C30D400897F
-7A1403001E02201C64000F001203E83A9800F27F
-7A140400280419284B0014001905DC4B00012C7F
-7A14050032012580780019001E07D05DC001A37F
+- **Backend Framework**: Django with FastAPI integration
+- **Database**: PostgreSQL
+- **Real-time Communication**: WebSocket
+- **Development Tools**: Python, Django ORM
 
-7A09020001141F40020101017F
+## Core Algorithms (BLL - Business Logic Layer)
 
-***cách xóa dữ liệu trong bảng agv_management_agv_data của database:
-- Mở pgAdmin 4 và chọn database
-- Mở query tool
-- Xóa toàn bộ dữ liệu trong bảng và đặt lại giá trị của một cột id (là khóa chính) về 1 trong PostgreSQL sau khi xóa toàn bộ dữ liệu của bảng:
+1. **Collision Avoidance (DSPA)**
+   - Dynamic Shared Point Allocation for preventing AGV collisions
+   - Real-time path adjustment and waiting time calculation
+   - Deadlock detection and resolution (heading-on and loop deadlocks)
 
-TRUNCATE TABLE ten_bang RESTART IDENTITY;
+2. **Path Planning**
+   - Optimal route calculation considering distance and energy consumption
+   - Dynamic obstacle avoidance
+   - Traffic management in shared spaces
 
-- Để tối ưu hóa dung lượng và giúp database hoạt động trơn tru hơn, chạy lệnh VACUUM trên bảng đã xóa, đảm bảo dung lượng được giải phóng trong database :
+3. **Resource Management**
+   - Intelligent AGV selection based on current load and position
+   - Energy consumption optimization
+   - Automated parking space allocation
 
-VACUUM ten_bang;
+4. **Scheduling System**
+   - Priority-based task scheduling
+   - Real-time schedule adjustment
+   - Conflict resolution in multi-AGV scenarios
 
-*** cách giải phóng các cổng đang được kết nối:
-- Xem các cổng đang được kết nối: 
+## Getting Started
 
-netstat -ano | findstr :5173
+### Prerequisites
 
-- Kết thúc tiến trình sử dụng cổng: 
+1. Python virtual environment
+2. PostgreSQL database
+3. Required Python packages
 
+### Installation
+
+1. Create a virtual environment:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # For Unix
+   venv\Scripts\activate     # For Windows
+   ```
+
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Set environment variable:
+   ```bash
+   # Windows
+   set DJANGO_SETTINGS_MODULE=web_management.settings
+   
+   # Unix
+   export DJANGO_SETTINGS_MODULE=web_management.settings
+   ```
+
+4. Start the server:
+   ```bash
+   uvicorn web_management.asgi:application --host 127.0.0.1 --port 8000 --lifespan off
+   ```
+
+## Database Management
+
+### Renaming Applications
+If you need to rename Django applications, use these SQL commands:
+```sql
+UPDATE django_content_type SET app_label = 'new_app_name' WHERE app_label = 'old_app_name';
+UPDATE django_migrations SET app = 'new_app_name' WHERE app = 'old_app_name';
+```
+
+### Cleaning Database Tables
+To clean and reset a table:
+```sql
+TRUNCATE TABLE table_name RESTART IDENTITY;
+VACUUM table_name;
+```
+
+## Troubleshooting
+
+### Port Management
+To check ports in use:
+```bash
+netstat -ano | findstr :port_number
+```
+
+To kill a process using a specific port:
+```bash
 taskkill /PID <PID> /F
+```
+
+## Contributing
+
+Please read our contributing guidelines before submitting pull requests.
+
+## License
+
+This project is proprietary and confidential. All rights reserved.

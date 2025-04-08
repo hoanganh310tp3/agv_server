@@ -74,7 +74,7 @@ class Constrains:
         
         # Điều kiện 1: SecondNode không thuộc SCP và không bị reserved bởi xe khác
         if not in_scp and current_state.secondNode not in reserved_points:
-            current_state.SA = 1  # Xe di chuyển bình thường
+            current_state.SA = 1
             current_state.F = 0   # Không đi vào SCP
             return ControlSignal
         
@@ -160,9 +160,7 @@ class Constrains:
                 else:
                     # Xe khác sẽ di chuyển - hiện tại đợi tại chỗ
                     current_state.SA = 2  # Waiting
-                    # Sử dụng cách dừng xe từ thuật toán cũ
-                    ControlSignal.Road = DTO.road.Road(0, 0, 100000)
-                    ControlSignal.Velocity = DTO.agv_car.AGVCar.MaxVelocity
+                    # Giữ nguyên đường đi hiện tại nhưng thêm thời gian đợi
                     ControlSignal.waitTime = 5  # Thời gian đợi mặc định 5s
                     return ControlSignal
         
@@ -184,18 +182,14 @@ class Constrains:
             else:
                 # Đợi tại chỗ
                 current_state.SA = 2
-                # Sử dụng cách dừng xe từ thuật toán cũ
-                ControlSignal.Road = DTO.road.Road(0, 0, 100000)
-                ControlSignal.Velocity = DTO.agv_car.AGVCar.MaxVelocity
+                # Giữ nguyên đường đi hiện tại nhưng thêm thời gian đợi
                 ControlSignal.waitTime = 5  # Thời gian đợi mặc định
                 return ControlSignal
         
         # Nếu không thỏa mãn điều kiện nào - đợi tại chỗ
         current_state.SA = 2
-        # Sử dụng cách dừng xe từ thuật toán cũ
-        ControlSignal.Road = DTO.road.Road(0, 0, 100000)
-        ControlSignal.Velocity = DTO.agv_car.AGVCar.MaxVelocity
-        ControlSignal.waitTime = 0
+        # Giữ nguyên đường đi hiện tại nhưng thêm thời gian đợi
+        ControlSignal.waitTime = 5  # Thời gian đợi mặc định
         return ControlSignal
 
     @staticmethod
