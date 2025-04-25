@@ -72,7 +72,7 @@ def create_schedule():
                 requirement.Order = int(order.order_number)
                 requirement.Date = str(order.order_date)
                 requirement.Name = str(order.load_name)
-                requirement.Number = int(order.load_amount)
+                requirement.LoadAmount = int(order.load_amount)
                 requirement.LoadWeight = float(order.load_weight)
                 requirement.TimeStart = str(order.start_time)
                 requirement.Inbound = int(order.start_point)
@@ -123,9 +123,9 @@ def get_control_signal_bytes(ListOfControlSignal):
     tempByteArray = bytearray()
     ListOfByteControlSignal = ListOfByteControlSignal + BLL.convert.Convert.returnIntToByte(122,1)
     for EachControlSignal in range(1, len(ListOfControlSignal)):
-        frameLength += 8  # Increase by 2 to account for waitTime (2 bytes)
+        frameLength += 5 # Increase by 2 to account for waitTime (2 bytes)
         # Include waitTime in the serialized data (converting to float with 2 bytes)
-        tempByteArray = tempByteArray + BLL.convert.Convert.returnIntToByte(ListOfControlSignal[EachControlSignal][0],2) + BLL.convert.Convert.returnFloatToByte(ListOfControlSignal[EachControlSignal][2],1) + BLL.convert.Convert.returnFloatToByte(ListOfControlSignal[EachControlSignal][3],2) + BLL.convert.Convert.returnIntToByte(ListOfControlSignal[EachControlSignal][4],1) + BLL.convert.Convert.returnFloatToByte(ListOfControlSignal[EachControlSignal][5] if len(ListOfControlSignal[EachControlSignal]) > 5 else 0, 2)
+        tempByteArray = tempByteArray + BLL.convert.Convert.returnIntToByte(ListOfControlSignal[EachControlSignal][0],2) + BLL.convert.Convert.returnIntToByte(ListOfControlSignal[EachControlSignal][4],1) + BLL.convert.Convert.returnFloatToByte(ListOfControlSignal[EachControlSignal][5] if len(ListOfControlSignal[EachControlSignal]) > 5 else 0, 2)
     ListOfByteControlSignal = ListOfByteControlSignal + BLL.convert.Convert.returnIntToByte(frameLength+4,1) + BLL.convert.Convert.returnIntToByte(3,1) + tempByteArray + BLL.convert.Convert.returnIntToByte(127,1)
     return ListOfByteControlSignal
 

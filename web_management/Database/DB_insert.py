@@ -84,6 +84,7 @@ def insertOrder(Order):
             order_number=Order.Order,
             load_name=Order.Name,
             load_weight=Order.LoadWeight,
+            load_amount=Order.LoadAmount,
             order_date=Order.Date,
             agv_id=car_id,
             est_energy=Order.TotalEnergy, 

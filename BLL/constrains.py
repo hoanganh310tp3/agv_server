@@ -15,38 +15,38 @@ class Constrains:
             self.secondNode = None # Next point to visit
             self.reservedPoint = None # Reserved point
             self.SP = []  # Spare points
-            self.residualPath = []  # Đường đi còn lại
+            self.residualPath = []  # Remaining path
 
     @staticmethod
     def CollisionConstrain(TimeStart, Road, ResidualPath=None):
         """
-        Kiểm tra và xử lý va chạm với logic DSPA (Dynamic Shared Point Allocation)
+        Check and handle collisions using DSPA (Dynamic Shared Point Allocation) logic
         Input:
-            TimeStart: Thời điểm bắt đầu
-            Road: Đoạn đường đang xét
-            ResidualPath: Đường đi còn lại của xe (optional)
+            TimeStart: Start time
+            Road: Current road segment
+            ResidualPath: Remaining path of the vehicle (optional)
         Return:
-            ControlSignal: Tín hiệu điều khiển cho xe với thêm thuộc tính waitTime
+            ControlSignal: Control signal for the vehicle with additional waitTime attribute
         """
         ControlSignal = DTO.control_signal.ControlSignal(Road)
-        # Thêm thuộc tính waitTime
+        # Add waitTime attribute
         ControlSignal.waitTime = 0
         
-        # Khởi tạo trạng thái hiện tại của xe
+        # Initialize current state of the vehicle
         current_state = Constrains.AGVState()
         current_state.firstNode = Road.FirstNode
         current_state.secondNode = Road.SecondNode
-        current_state.reservedPoint = Road.SecondNode  # Mặc định dự định đi đến secondNode
+        current_state.reservedPoint = Road.SecondNode  # Default plan is to go to secondNode
         
         if ResidualPath:
             current_state.residualPath = ResidualPath
         
-        # Nếu không có lịch trình nào khác, xe di chuyển bình thường
+        # If there are no other schedules, vehicle moves normally
         if len(DTO.schedule.Schedule.ListOfSchedule) == 0:
             current_state.SA = 1
             return ControlSignal
 
-        # Lấy danh sách routes và vị trí hiện tại của tất cả xe
+        # Get list of routes and current positions of all vehicles
         list_of_routes = []
         other_positions = []
         for schedule in DTO.schedule.Schedule.ListOfSchedule:
@@ -55,62 +55,62 @@ class Constrains:
                 route.append(signal.Road)
             list_of_routes.append(route)
             
-            # Lấy vị trí hiện tại của xe
+            # Get current position of the vehicle
             pos = BLL.position.Position.returnPosition(TimeStart, schedule)
-            if pos.FirstNode:  # Chỉ xem xét các xe đang hoạt động
+            if pos.FirstNode:  # Only consider active vehicles
                 other_positions.append(pos)
 
-        # Tìm CP và SCP cho tất cả routes
+        # Find CP and SCP for all routes
         CP, SCP = BLL.road.Road.find_shared_points(list_of_routes)
         route_index = list_of_routes.index(Road) if Road in list_of_routes else -1
         
-        # Kiểm tra xem secondNode có thuộc SCP không
+        # Check if secondNode belongs to SCP
         in_scp = False
         if route_index != -1 and route_index in SCP:
             in_scp = current_state.secondNode in SCP[route_index]
         
-        # Danh sách các điểm reserved bởi xe khác
+        # List of points reserved by other vehicles
         reserved_points = [p.SecondNode for p in other_positions]
         
-        # Điều kiện 1: SecondNode không thuộc SCP và không bị reserved bởi xe khác
+        # Condition 1: SecondNode is not in SCP and not reserved by other vehicles
         if not in_scp and current_state.secondNode not in reserved_points:
             current_state.SA = 1
-            current_state.F = 0   # Không đi vào SCP
+            current_state.F = 0   # Not entering SCP
             return ControlSignal
         
-        # Điều kiện 2: SecondNode thuộc SCP và không có điểm nào trong SCP bị reserved 
-        # bởi xe khác với F=0
+        # Condition 2: SecondNode is in SCP and no point in SCP is reserved
+        # by other vehicles with F=0
         if in_scp:
             scp_is_free = True
             for node in SCP[route_index]:
                 for pos in other_positions:
-                    # Kiểm tra nếu node này là reserved point của xe khác
+                    # Check if this node is a reserved point of another vehicle
                     if node == pos.SecondNode:
-                        # Lấy F của xe khác
+                        # Get F of the other vehicle
                         other_schedule = next((s for s in DTO.schedule.Schedule.ListOfSchedule 
                                             if s.Car == pos.Car), None)
                         other_F = 0
                         if hasattr(other_schedule, 'F'):
                             other_F = other_schedule.F
                         
-                        # Nếu xe khác có F=0, SCP không trống
+                        # If other vehicle has F=0, SCP is not empty
                         if other_F == 0:
                             scp_is_free = False
                             break
         
-            # Nếu SCP trống hoặc chỉ có xe với F=1, xe có thể đi
+            # If SCP is empty or only has vehicles with F=1, vehicle can proceed
             if scp_is_free and current_state.secondNode not in reserved_points:
                 current_state.SA = 1
-                current_state.F = 1  # Đang đi vào SCP
+                current_state.F = 1  # Entering SCP
                 return ControlSignal
         
-        # Điều kiện 3: SecondNode thuộc SCP và có điểm trong SCP bị reserved, nhưng
-        # xe khác chưa đi vào SCP (F=0) và có spare points
+        # Condition 3: SecondNode is in SCP and some point in SCP is reserved, but
+        # other vehicle has not entered SCP (F=0) and there are spare points
         if in_scp:
-            # Tìm spare points
+            # Find spare points
             spare_points = BLL.road.Road.allocate_spare_points(route_index, list_of_routes)
             
-            # Kiểm tra xem có điểm nào trong SCP bị reserved bởi xe khác với F=0 không
+            # Check if any point in SCP is reserved by another vehicle with F=0
             other_car_reserved_scp = False
             for node in SCP[route_index]:
                 for pos in other_positions:
@@ -125,51 +125,51 @@ class Constrains:
                             other_car_reserved_scp = True
                             break
             
-            # Nếu có spare points và SecondNode không bị reserved
+            # If there are spare points and SecondNode is not reserved
             if spare_points and other_car_reserved_scp and current_state.secondNode not in reserved_points:
                 current_state.SP = spare_points
                 current_state.SA = 1
                 current_state.F = 1
                 
-                # Nếu xe đã đi vào SCP (F=1) và firstNode là spare point, xóa nó khỏi SP
+                # If vehicle has entered SCP (F=1) and firstNode is a spare point, remove it from SP
                 if current_state.firstNode in spare_points:
                     current_state.SP.remove(current_state.firstNode)
                 
                 return ControlSignal
         
-        # Xử lý deadlock
-        # Kiểm tra Heading-on deadlock
+        # Handle deadlock
+        # Check for Heading-on deadlock
         for pos in other_positions:
-            # Heading-on deadlock: SecondNode của xe này là FirstNode của xe khác và ngược lại
+            # Heading-on deadlock: SecondNode of this vehicle is FirstNode of another vehicle and vice versa
             if current_state.secondNode == pos.FirstNode and pos.SecondNode == current_state.firstNode:
-                # Nếu xe hiện tại có F=1 (đã đi vào SCP), sử dụng spare point
+                # If current vehicle has F=1 (already entered SCP), use spare point
                 if current_state.F == 1:
                     spare_points = BLL.road.Road.allocate_spare_points(route_index, list_of_routes)
                     if spare_points:
                         nearest_spare = spare_points[0]
-                        # Di chuyển tới spare point
+                        # Move to spare point
                         ControlSignal.Road = DTO.road.Road(
                             current_state.firstNode,
                             nearest_spare,
                             BLL.road.Road.GetDistance(current_state.firstNode, nearest_spare),
                             0
                         )
-                        # Thêm thuộc tính waitTime
+                        # Add waitTime attribute
                         ControlSignal.waitTime = 0
                         return ControlSignal
                 else:
-                    # Xe khác sẽ di chuyển - hiện tại đợi tại chỗ
+                    # Other vehicle will move - current vehicle waits
                     current_state.SA = 2  # Waiting
-                    # Giữ nguyên đường đi hiện tại nhưng thêm thời gian đợi
-                    ControlSignal.waitTime = 5  # Thời gian đợi mặc định 5s
+                    # Keep current path but add wait time
+                    ControlSignal.waitTime = 5  # Default wait time 5s
                     return ControlSignal
         
-        # Kiểm tra Loop deadlock
+        # Check for Loop deadlock
         is_loop_deadlock = Constrains._check_loop_deadlock(TimeStart, current_state, other_positions)
         if is_loop_deadlock:
             spare_points = BLL.road.Road.allocate_spare_points(route_index, list_of_routes)
             if spare_points and current_state.F == 1:
-                # Di chuyển tới spare point
+                # Move to spare point
                 nearest_spare = spare_points[0]
                 ControlSignal.Road = DTO.road.Road(
                     current_state.firstNode,
@@ -180,36 +180,36 @@ class Constrains:
                 ControlSignal.waitTime = 0
                 return ControlSignal
             else:
-                # Đợi tại chỗ
+                # Wait in place
                 current_state.SA = 2
-                # Giữ nguyên đường đi hiện tại nhưng thêm thời gian đợi
-                ControlSignal.waitTime = 5  # Thời gian đợi mặc định
+                # Keep current path but add wait time
+                ControlSignal.waitTime = 5  # Default wait time
                 return ControlSignal
         
-        # Nếu không thỏa mãn điều kiện nào - đợi tại chỗ
+        # If no condition is satisfied - wait in place
         current_state.SA = 2
-        # Giữ nguyên đường đi hiện tại nhưng thêm thời gian đợi
-        ControlSignal.waitTime = 5  # Thời gian đợi mặc định
+        # Keep current path but add wait time
+        ControlSignal.waitTime = 5  # Default wait time
         return ControlSignal
 
     @staticmethod
     def _check_loop_deadlock(TimeStart, current_state, other_positions):
         """
-        Kiểm tra xem có tồn tại loop deadlock không
+        Check if a loop deadlock exists
         """
         visited = set()
         current = current_state.firstNode
         
-        # Tạo dictionary ánh xạ từ firstNode đến secondNode
+        # Create dictionary mapping from firstNode to secondNode
         next_moves = {}
         for pos in other_positions:
             if pos.FirstNode and pos.SecondNode:
                 next_moves[pos.FirstNode] = pos.SecondNode
         
-        # Thêm current_state vào
+        # Add current_state
         next_moves[current_state.firstNode] = current_state.secondNode
         
-        # Kiểm tra chu trình
+        # Check for cycle
         while current not in visited:
             visited.add(current)
             

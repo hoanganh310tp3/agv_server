@@ -63,6 +63,7 @@ class Schedule:
             Schedule.Outbound = Requirement.Outbound
             Schedule.TimeStart = Requirement.TimeStart
             Schedule.LoadWeight = Requirement.LoadWeight
+            Schedule.LoadAmount = Requirement.LoadAmount
             
             # Get the AGV's assigned parking spot
             agv_id = int(Schedule.Car.CarId)
