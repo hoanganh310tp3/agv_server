@@ -10,8 +10,8 @@ class station_data(models.Model):
         ('HOME', 'Parking station'),
         ('BAT', 'Charging station'),
         ('PICK', 'Pick up'),
-        ('DROP', 'Drop') 
-        # TO ADD MORE CUZ I CANT THINK OF ANYTHING RN
+        ('DROP', 'Drop'),
+        
     )
     LOAD_TRANSFER = (
         ('AUTO', 'Automatic'),

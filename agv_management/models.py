@@ -59,6 +59,46 @@ class agv_status(models.Model):
 
 
 #data handling
+# class AGVData():
+#     class Position():
+#         def __init__(self, pNode, nNode, distance):
+#             self.prevNode = pNode
+#             self.nextNode = nNode
+#             self.distance = distance
+
+#     messageFrameAGVData = [1, 1, 1, 2, 1, 2, 1, 2, 2, 2, 2, 2, 1]
+#     payloadAGVData = []
+#     bufferAGVData = []
+#     carPosition = Position
+    
+#     def __init__(self, payload):
+#         self.payloadAGVData = payload
+    
+#     def decodeBuffer(self):
+#         self.bufferAGVData = buffer.spliceBuffer(self.messageFrameAGVData, self.payloadAGVData)
+#         # Decode trực tiếp từ bytes
+#         self.carID = int.from_bytes(self.bufferAGVData[3], byteorder='big')
+#         self.carState = int.from_bytes(self.bufferAGVData[4], byteorder='big')
+#         self.carBatteryCap = int.from_bytes(self.bufferAGVData[5], byteorder='big')
+#         self.carSpeed = int.from_bytes(self.bufferAGVData[6], byteorder='big')
+#         self.carPosition.prevNode = int.from_bytes(self.bufferAGVData[7], byteorder='big')
+#         self.carPosition.nextNode = int.from_bytes(self.bufferAGVData[8], byteorder='big')
+#         self.carPosition.distance = int.from_bytes(self.bufferAGVData[9], byteorder='big')   
+#         self.distanceSum = int.from_bytes(self.bufferAGVData[10], byteorder='big')
+#         self.checkSum = int.from_bytes(self.bufferAGVData[11], byteorder='big')
+        
+    
+#     def printOut(self):
+#         print("carId:", self.carID, "state:", self.carState, "battery capacity:", self.carBatteryCap/100, "speed:", self.carSpeed/100, "current position:",
+#                     self.carPosition.prevNode, self.carPosition.nextNode, self.carPosition.distance/100, "total energy:", self.distanceSum/100)
+
+#     # def check_sum(self):
+#     #     checkSumValue = self.carID + self.carState + self.carBatteryCap + self.carSpeed + self.carPosition.prevNode + self.carPosition.nextNode + self.carPosition.distance + self.distanceSum + self.checkSum
+#     #     if (checkSumValue + self.check_sum == 65536):
+#     #         return True # packet valid
+#     #     else:
+#     #         return False # packet invalid
+             
 class AGVData():
     class Position():
         def __init__(self, pNode, nNode, distance):
@@ -66,7 +106,8 @@ class AGVData():
             self.nextNode = nNode
             self.distance = distance
 
-    messageFrameAGVData = [2, 2, 2, 4, 2, 4, 2, 4, 4, 4, 4, 4, 2]
+    # Frame chỉ chứa thông tin cơ bản và prevNode
+    messageFrameAGVData = [1, 1, 1, 2, 1, 2, 1, 2, 2, 2, 2, 2, 1]
     payloadAGVData = []
     bufferAGVData = []
     carPosition = Position
@@ -76,28 +117,20 @@ class AGVData():
     
     def decodeBuffer(self):
         self.bufferAGVData = buffer.spliceBuffer(self.messageFrameAGVData, self.payloadAGVData)
-        self.carID = int(self.bufferAGVData[3], 16)
-        self.carState = int(self.bufferAGVData[4], 16)
-        self.carBatteryCap = int(self.bufferAGVData[5], 16)
-        self.carSpeed = int(self.bufferAGVData[6], 16)
-        self.carPosition.prevNode = int(self.bufferAGVData[7], 16)
-        self.carPosition.nextNode = int(self.bufferAGVData[8], 16)
-        self.carPosition.distance = int(self.bufferAGVData[9], 16)   
-        self.distanceSum = int(self.bufferAGVData[10], 16)
-        self.checkSum = int(self.bufferAGVData[11], 16)
         
-    
-    def printOut(self):
-        print("carId:", self.carID, "state:", self.carState, "battery capacity:", self.carBatteryCap/100, "speed:", self.carSpeed/100, "current position:",
-                    self.carPosition.prevNode, self.carPosition.nextNode, self.carPosition.distance/100, "total energy:", self.distanceSum/100)
+        # Chỉ lấy thông tin prevNode từ frame
+        self.carPosition.prevNode = int.from_bytes(self.bufferAGVData[3], byteorder='big')
+        
+        # Set các giá trị mặc định cho các thông tin khác
+        self.carID = 0  # Giả sử carID mặc định là 0
+        self.carState = 0  # Giả sử trạng thái mặc định là 0
+        self.carBatteryCap = 0  # Giả sử battery mặc định là 0
+        self.carSpeed = 0  # Giả sử tốc độ mặc định là 0
+        self.carPosition.nextNode = 0  # Giả sử nextNode mặc định là 0
+        self.carPosition.distance = 0  # Giả sử distance mặc định là 0
+        self.distanceSum = 0  # Giả sử distanceSum mặc định là 0
+        self.checkSum = 0  # Giả sử checkSum mặc định là 0
 
-    # def check_sum(self):
-    #     checkSumValue = self.carID + self.carState + self.carBatteryCap + self.carSpeed + self.carPosition.prevNode + self.carPosition.nextNode + self.carPosition.distance + self.distanceSum + self.checkSum
-    #     if (checkSumValue + self.check_sum == 65536):
-    #         return True # packet valid
-    #     else:
-    #         return False # packet invalid
-             
 
 class agv_data(models.Model):
     data_id = models.BigAutoField(primary_key=True) 
@@ -126,8 +159,29 @@ class agv_error(models.Model):
     next_waypoint = models.IntegerField()  
     order_number = models.IntegerField() #recently added
 
+
+    # Thay đổi messageFrameAGVError để phản ánh số byte thực tế
+    # 2 -> 1 byte, 4 -> 2 bytes
+    # messageFrameAGVError = [1, 1, 1, 2, 1, 1, 2, 2, 1]
+    # payloadAGVError = []
+    # bufferAGVError = []
+
+    # def __init__(self, payload):
+    #     self.payloadAGVError = payload
+    
+    # def decodeBuffer(self):
+    #     self.bufferAGVError = buffer.spliceBuffer(self.messageFrameAGVError, self.payloadAGVError)
+    #     # Decode trực tiếp từ bytes
+    #     self.carID = int.from_bytes(self.bufferAGVError[3], byteorder='big')
+    #     self.errorCode = int.from_bytes(self.bufferAGVError[4], byteorder='big')
+    #     self.orderNum = int.from_bytes(self.bufferAGVError[5], byteorder='big')
+    #     self.prevNode = int.from_bytes(self.bufferAGVError[6], byteorder='big')
+    #     self.nextNode = int.from_bytes(self.bufferAGVError[7], byteorder='big')
+    
+        
 class AGVError():
-    messageFrameAGVError = [2, 2, 2, 4, 2, 2, 4, 4, 2]
+    # Frame chỉ chứa thông tin cơ bản, errorCode và prevNode
+    messageFrameAGVError = [1, 1, 1, 2, 1, 1, 2, 2, 1]
     payloadAGVError = []
     bufferAGVError = []
 
@@ -136,10 +190,12 @@ class AGVError():
     
     def decodeBuffer(self):
         self.bufferAGVError = buffer.spliceBuffer(self.messageFrameAGVError, self.payloadAGVError)
-        self.carID = int(self.bufferAGVError[3], 16)
-        self.errorCode = int(self.bufferAGVError[4], 16)
-        self.orderNum = int(self.bufferAGVError[5], 16)
-        self.prevNode = int(self.bufferAGVError[6], 16)
-        self.nextNode = int(self.bufferAGVError[7], 16)
-    
         
+        # Chỉ lấy errorCode và prevNode từ frame
+        self.errorCode = int.from_bytes(self.bufferAGVError[3], byteorder='big')
+        self.prevNode = int.from_bytes(self.bufferAGVError[4], byteorder='big')
+        
+        # Set các giá trị mặc định cho các thông tin khác
+        self.carID = 0  # Giả sử carID mặc định là 0
+        self.orderNum = 0  # Giả sử orderNum mặc định là 0
+        self.nextNode = 0  # Giả sử nextNode mặc định là 0

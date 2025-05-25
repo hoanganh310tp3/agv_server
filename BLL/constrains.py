@@ -32,6 +32,9 @@ class Constrains:
         # Add waitTime attribute
         ControlSignal.waitTime = 0
         
+        # IMPORTANT: Update Action from Road.Direction
+        ControlSignal.Action = Road.Direction
+        
         # Initialize current state of the vehicle
         current_state = Constrains.AGVState()
         current_state.firstNode = Road.FirstNode

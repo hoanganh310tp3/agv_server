@@ -31,14 +31,31 @@ class Schedule:
             TotalDistance = TotalDistance  + EachControlSignal.Road.Distance
         return TotalDistance
       
+    # def list_control_signal(self):
+    #     ControlSignal = list()
+    #     ControlSignal.append(self.get_car_id())
+    #     for EachControlSignal in self.ListOfControlSignal:
+    #         ControlSignal.append([EachControlSignal.Road.FirstNode, EachControlSignal.Road.SecondNode, EachControlSignal.Velocity, EachControlSignal.Road.Distance, EachControlSignal.Road.Direction, EachControlSignal.waitTime])
+         
+    #     length = len(self.ListOfControlSignal)-1
+    #     ControlSignal.append([self.ListOfControlSignal[length].Road.SecondNode, self.ListOfControlSignal[length].Road.SecondNode, 0, 0, 0, 0])
+    #     return ControlSignal
+
     def list_control_signal(self):
         ControlSignal = list()
         ControlSignal.append(self.get_car_id())
+    
+    # Add first node with straight direction (1 is straight)
+        firstNode = self.ListOfControlSignal[0].Road.FirstNode
+        ControlSignal.append([firstNode, firstNode, 0, 0, 1, 0])  # First node, straight direction
+    
+    # Add remaining control signals
         for EachControlSignal in self.ListOfControlSignal:
             ControlSignal.append([EachControlSignal.Road.FirstNode, EachControlSignal.Road.SecondNode, EachControlSignal.Velocity, EachControlSignal.Road.Distance, EachControlSignal.Road.Direction, EachControlSignal.waitTime])
-         
+     
+    # Add final node
         length = len(self.ListOfControlSignal)-1
         ControlSignal.append([self.ListOfControlSignal[length].Road.SecondNode, self.ListOfControlSignal[length].Road.SecondNode, 0, 0, 0, 0])
+    
         return ControlSignal
-
     

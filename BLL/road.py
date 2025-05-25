@@ -11,12 +11,19 @@ class Road:
     def GetDirection(PreviousNode, NextNode):
         return int(DTO.map_topology.MapTopology.Direction[int(PreviousNode)][int(NextNode)])
     
-    # hướng đông = 2
-    # hướng tây = 4
-    # hướng nam = 3
-    # hướng bắc = 1
-    # vô hướng = 5
+# hướng đông = 2
+# hướng tây = 4
+# hướng nam = 3
+# hướng bắc = 1
+# vô hướng = 5
     
+# Số 1: Đi thẳng 
+# Số 2: Rẽ phải
+# Số 3: Rẽ trái
+# Số 4: Quay đầu
+# Số 0: không cần xử lý hướng
+
+
     @staticmethod
     def returnListOfRoad(ListOfNode):
         ListOfRoad = list()

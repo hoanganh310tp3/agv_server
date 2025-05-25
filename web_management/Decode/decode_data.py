@@ -12,33 +12,33 @@ def decodeThis(topic, payload):
 
     if topicName == 'agv_data':
         print("Calling deal_with_agv_data")
-        deal_with_agv_data(payload)
+        deal_with_agv_data(payload, carID)
     elif topicName == 'agverror':
-        deal_with_agv_error(payload)
+        deal_with_agv_error(payload, carID)
     elif topicName == 'agv_identify':
         deal_with_agv_identify(payload, carID)  # Truyền thêm carID
     else:
         print(f"Unhandled topic name: {topicName}")
 
-def deal_with_agv_data(payload):
+def deal_with_agv_data(payload, carID):
     print(f"Processing AGV data with payload {payload}")
     try:
         Data = AGVData(payload)
         Data.decodeBuffer()
         print(f"Decoded AGV data: {vars(Data)}")
-        DB_insert.insertAGVData(Data)
+        DB_insert.insertAGVData(Data, carID)
         print("AGV data inserted into database")
     except Exception as e:
         print(f"Error processing AGV data: {e}")
 
         
-def deal_with_agv_error(payload):
+def deal_with_agv_error(payload, carID):
     print(f"Processing AGV error with payload {payload}")
     try:
         Data = AGVError(payload)
         Data.decodeBuffer()
         print(f"Decoded AGV error: {vars(Data)}")
-        DB_insert.insertAGVError(Data)
+        DB_insert.insertAGVError(Data, carID)
         print("AGV error inserted into database")
     except Exception as e:
         print(f"Error processing AGV error: {e}")

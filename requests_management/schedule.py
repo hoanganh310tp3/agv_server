@@ -125,7 +125,8 @@ def get_control_signal_bytes(ListOfControlSignal):
     for EachControlSignal in range(1, len(ListOfControlSignal)):
         frameLength += 5 # Increase by 2 to account for waitTime (2 bytes)
         # Include waitTime in the serialized data (converting to float with 2 bytes)
-        tempByteArray = tempByteArray + BLL.convert.Convert.returnIntToByte(ListOfControlSignal[EachControlSignal][0],2) + BLL.convert.Convert.returnIntToByte(ListOfControlSignal[EachControlSignal][4],1) + BLL.convert.Convert.returnFloatToByte(ListOfControlSignal[EachControlSignal][5] if len(ListOfControlSignal[EachControlSignal]) > 5 else 0, 2)
+        # Second Node, Direction, WaitTime
+        tempByteArray = tempByteArray + BLL.convert.Convert.returnIntToByte(ListOfControlSignal[EachControlSignal][1],2) + BLL.convert.Convert.returnIntToByte(ListOfControlSignal[EachControlSignal][4],1) + BLL.convert.Convert.returnFloatToByte(ListOfControlSignal[EachControlSignal][5] if len(ListOfControlSignal[EachControlSignal]) > 5 else 0, 2)
     ListOfByteControlSignal = ListOfByteControlSignal + BLL.convert.Convert.returnIntToByte(frameLength+4,1) + BLL.convert.Convert.returnIntToByte(3,1) + tempByteArray + BLL.convert.Convert.returnIntToByte(127,1)
     return ListOfByteControlSignal
 
@@ -310,16 +311,20 @@ def update_agv_positions():
                 instruction_set = json.loads(schedule.instruction_set)
                 
                 # Get the schedule times
-                start_time = f"{schedule.order_date} {schedule.est_start_time}"
-                end_time = f"{schedule.order_date} {schedule.est_end_time}"
-                
-                start_timestamp = time.mktime(time.strptime(start_time, "%Y-%m-%d %H:%M:%S"))
-                end_timestamp = time.mktime(time.strptime(end_time, "%Y-%m-%d %H:%M:%S"))
-                
-                # Skip schedules that haven't started yet
-                if start_timestamp > now_timestamp:
+                try:
+                    start_time = f"{schedule.order_date} {schedule.est_start_time}"
+                    end_time = f"{schedule.order_date} {schedule.est_end_time}"
+
+                    start_timestamp = time.mktime(time.strptime(start_time, "%Y-%m-%d %H:%M:%S"))
+                    end_timestamp = time.mktime(time.strptime(end_time, "%Y-%m-%d %H:%M:%S"))
+
+                    # Skip schedules that haven't started yet
+                    if float(start_timestamp) > float(now_timestamp):
+                        continue
+                except (ValueError, TypeError) as e:
+                    logger.error(f"Error processing schedule {schedule.schedule_id}: {e}")
                     continue
-                    
+                
                 # Check if the schedule has completed
                 if end_timestamp < now_timestamp:
                     # Mark as processed/completed

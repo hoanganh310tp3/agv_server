@@ -1,4 +1,3 @@
-
 import BLL.cost_function
 import DTO.population
 import DTO.abc_parameter
@@ -96,13 +95,16 @@ class ABC:
                 self.BestCostList.append(self.BestCost.CostValue)
     
     @staticmethod
-    def ABCAlgorithm(self,Inbound,Outbound,LoadWeight,TimeStart):
-
+    def ABCAlgorithm(self, Inbound, Outbound, LoadWeight, TimeStart):
+        # Khởi tạo quần thể MỘT LẦN DUY NHẤT
+        self.CreateInitialPopulation(self, Inbound, Outbound, LoadWeight, TimeStart)
+        
+        # Vòng lặp chính
         for i in range(DTO.abc_parameter.ABCSetting.MaxIt):
-            self.CreateInitialPopulation(self,Inbound,Outbound,LoadWeight,TimeStart)
             self.RecruitedBees(self)
             self.CalculateFitness(self)
             self.OnlookerBees(self)
             self.ScoutBees(self)
             self.BestSolution(self)
+        
         return self.BestCost

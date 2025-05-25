@@ -4,8 +4,8 @@ from requests_management.models import schedule_data, order_data
 from django.utils import timezone
 import json
 
-def insertAGVData(AGVData):
-    agv_data.objects.create(  car_id = AGVData.carID, 
+def insertAGVData(AGVData, carID):
+    agv_data.objects.create(  car_id = carID, 
                               agv_state = AGVData.carState, 
                               agv_battery= AGVData.carBatteryCap/100, 
                               agv_speed = AGVData.carSpeed/100, 
@@ -15,8 +15,8 @@ def insertAGVData(AGVData):
                               distance_sum = AGVData.distanceSum/100,
                               time_stamp = timezone.now())
     
-def insertAGVError(AGVError):
-    agv_error.objects.create(  car_id = AGVError.carID,
+def insertAGVError(AGVError, carID):
+    agv_error.objects.create(  car_id = carID,
                                order_number = AGVError.orderNum,
                                error_id = AGVError.errorCode,
                                previous_waypoint = AGVError.prevNode, 

@@ -10,7 +10,7 @@ def on_message(client, userdata, message):
         payload = message.payload
         agv_data = AGVData(payload)
         agv_data.decodeBuffer()
-        inserted_data = insertAGVData(agv_data)
+        inserted_data = insertAGVData(agv_data, agv_data.carID)
         
         # Send the new data to the WebSocket group
         async_to_sync(channel_layer.group_send)(
