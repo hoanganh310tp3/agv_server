@@ -87,10 +87,29 @@ class Schedule:
                 logger.error(f"Could not find path to parking spot {parking_spot} for AGV {agv_id}")
                 return None
 
-            # Combine all control signals: car trip + transport trip + parking return trip
+            # Create a turn-around segment at the delivery point
+            turn_around_road = DTO.road.Road(
+                Requirement.Outbound,  # From delivery point
+                Requirement.Outbound,  # To same point (turn around in place)
+                0,                     # No distance
+                4                      # Direction = 4 (turn around)
+            )
+
+            turn_around_signal = DTO.control_signal.ControlSignal(turn_around_road)
+            turn_around_signal.Velocity = 0.1  # Slow speed for turning
+            turn_around_signal.Action = 4      # Turn around action
+            turn_around_signal.waitTime = 0
+            
+            if SelectedTransportingTrip.ListOfControlSignal:
+                last_segment = SelectedTransportingTrip.ListOfControlSignal[-1]
+                last_segment.Road.Direction = 0  # No direction processing needed
+                last_segment.Action = 0   
+
+            # Combine all control signals: car trip + transport trip + turn around + parking return trip
             Schedule.ListOfControlSignal = (
                 SelectedCarTrip.Cost.ListOfControlSignal + 
                 SelectedTransportingTrip.ListOfControlSignal +
+                [turn_around_signal] +
                 parking_return_trip.ListOfControlSignal
             )
             

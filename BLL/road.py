@@ -64,7 +64,7 @@ class Road:
                 ProcessedDirection = 3
             elif UnProcessedDirection1 == 1 and UnProcessedDirection2 == 3:
                 ProcessedDirection = 4
-            elif UnProcessedDirection1 == 5 or UnProcessedDirection2 == 5:
+            elif UnProcessedDirection1 == 5 and UnProcessedDirection2 == 5:
                 ProcessedDirection = 0
             else:
                 pass

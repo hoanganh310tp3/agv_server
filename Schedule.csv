@@ -1,2 +1,1 @@
 Order,Name,CarId,BatteryCapacity,TotalEnergy,WeightLoad,TimeStart,TimeEnd,Inbound,Outbound,TotalDistance
-312,stone,3,99.89,455.826,2.0,15:14:30,15:17:30,2,10,30.0,25(2.0 m)(0.2 m/s)(0 s),58(3.0 m)(0.2 m/s)(0 s),87(4.0 m)(0.2 m/s)(0 s),710(6.0 m)(0.2 m/s)(0 s),107(6.0 m)(0.2 m/s)(0 s),78(4.0 m)(0.2 m/s)(0 s),85(3.0 m)(0.2 m/s)(0 s),52(2.0 m)(0.2 m/s)(0 s),

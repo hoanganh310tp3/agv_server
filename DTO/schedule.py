@@ -50,8 +50,23 @@ class Schedule:
         ControlSignal.append([firstNode, firstNode, 0, 0, 1, 0])  # First node, straight direction
     
     # Add remaining control signals
-        for EachControlSignal in self.ListOfControlSignal:
-            ControlSignal.append([EachControlSignal.Road.FirstNode, EachControlSignal.Road.SecondNode, EachControlSignal.Velocity, EachControlSignal.Road.Distance, EachControlSignal.Road.Direction, EachControlSignal.waitTime])
+        for i, EachControlSignal in enumerate(self.ListOfControlSignal):
+            # For the last segment, set velocity = 0 and direction = 0 (stopped)
+            if i == len(self.ListOfControlSignal) - 1:
+                velocity = 0
+                direction = 0
+            else:
+                velocity = EachControlSignal.Velocity
+                direction = EachControlSignal.Road.Direction
+            
+            ControlSignal.append([
+                EachControlSignal.Road.FirstNode, 
+                EachControlSignal.Road.SecondNode, 
+                velocity, 
+                EachControlSignal.Road.Distance, 
+                direction, 
+                EachControlSignal.waitTime
+            ])
      
     # Add final node
         length = len(self.ListOfControlSignal)-1
