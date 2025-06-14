@@ -37,6 +37,9 @@ class Road:
             else:
                 UnProcessedDirection2 = BLL.road.Road.GetDirection(ListOfNode[i+1], ListOfNode[i+2])
             
+            # Initialize ProcessedDirection with a default value
+            ProcessedDirection = 0  # Default to no direction processing
+            
             # Process directions only for non-last segments
             if UnProcessedDirection2 == UnProcessedDirection1:
                 ProcessedDirection = 1
@@ -66,8 +69,7 @@ class Road:
                 ProcessedDirection = 4
             elif UnProcessedDirection1 == 5 and UnProcessedDirection2 == 5:
                 ProcessedDirection = 0
-            else:
-                pass
+        
             Road = DTO.road.Road(ListOfNode[i],ListOfNode[i+1],BLL.road.Road.GetDistance(ListOfNode[i],ListOfNode[i+1]), ProcessedDirection)
             ListOfRoad.append(Road)
         return ListOfRoad
